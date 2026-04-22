@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tracking Item Minus — PT. SABERINDO PACIFIC</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+
+<style>
+  :root {
+    --bg: #f5f5f4;
+    --surface: #ffffff;
+    --surface-2: #fafaf9;
+    --border: #e7e5e4;
+    --border-strong: #d6d3d1;
+    --text: #1c1917;
+    --text-muted: #78716c;
+    --text-subtle: #a8a29e;
+    --ink: #0c0a09;
+    --accent: #f59e0b;
+    --accent-dark: #b45309;
+    --success: #059669;
+    --success-bg: #ecfdf5;
+    --success-border: #a7f3d0;
+    --warning: #d97706;
+    --warning-bg: #fffbeb;
+    --warning-border: #fde68a;
+    --pending: #78716c;
+    --pending-bg: #f5f5f4;
+    --pending-border: #e7e5e4;
+    --danger: #dc2626;
+    --danger-bg: #fef2f2;
+    --radius: 10px;
+    --shadow-sm: 0 1px 2px rgba(28,25,23,0.04);
+    --shadow: 0 1px 3px rgba(28,25,23,0.06), 0 1px 2px rgba(28,25,23,0.04);
+    --shadow-lg: 0 10px 30px rgba(28,25,23,0.12), 0 4px 8px rgba(28,25,23,0.06);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+
+  .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+  /* ===== HEADER ===== */
+  header {
+    background: var(--ink);
+    color: #fafaf9;
+    padding: 20px 32px;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .header-inner {
+    max-width: 1600px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .logo-mark {
+    width: 42px; height: 42px;
+    background: var(--accent);
+    color: var(--ink);
+    display: grid; place-items: center;
+    font-weight: 800;
+    font-size: 18px;
+    border-radius: 6px;
+    letter-spacing: -0.5px;
+  }
+
+  .header-text h1 {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  .header-text p {
+    font-size: 12px;
+    color: #a8a29e;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  .header-badge {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #d6d3d1;
+    background: rgba(255,255,255,0.06);
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+
+  /* ===== MAIN ===== */
+  main {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 24px 32px 64px;
+  }
+
+  /* ===== STATS ===== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent-current, var(--border-strong));
+  }
+
+  .stat-card[data-kind="total"]   { --accent-current: var(--ink); }
+  .stat-card[data-kind="clear"]   { --accent-current: var(--success); }
+  .stat-card[data-kind="progress"]{ --accent-current: var(--warning); }
+  .stat-card[data-kind="pending"] { --accent-current: var(--pending); }
+
+  .stat-icon {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .stat-card[data-kind="total"]    .stat-icon { background: #f5f5f4; color: var(--ink); }
+  .stat-card[data-kind="clear"]    .stat-icon { background: var(--success-bg); color: var(--success); }
+  .stat-card[data-kind="progress"] .stat-icon { background: var(--warning-bg); color: var(--warning); }
+  .stat-card[data-kind="pending"]  .stat-icon { background: var(--pending-bg); color: var(--pending); }
+
+  .stat-body { flex: 1; min-width: 0; }
+
+  .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+  }
+
+  .stat-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1.1;
+    margin-top: 4px;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+
+  .stat-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+
+  /* ===== PROGRESS BAR ===== */
+  .progress-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .progress-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .progress-header .label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+  }
+
+  .progress-header .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  .progress-track {
+    height: 8px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+  }
+
+  .progress-fill-clear {
+    background: var(--success);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .progress-fill-progress {
+    background: var(--warning);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* ===== CONTROLS ===== */
+  .controls {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .search-wrap {
+    flex: 1;
+    min-width: 240px;
+    position: relative;
+  }
+
+  .search-wrap svg {
+    position: absolute;
+    left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-subtle);
+    pointer-events: none;
+  }
+
+  input, select, textarea, button { font: inherit; }
+
+  input[type="text"], input[type="search"], select, textarea {
+    width: 100%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    color: var(--text);
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .search-wrap input { padding-left: 38px; }
+
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--ink);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px rgba(28,25,23,0.08);
+  }
+
+  select {
+    cursor: pointer;
+    min-width: 150px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23787167' stroke-width='2'><polyline points='6 9 12 15 18 9'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 34px;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .btn:hover { border-color: var(--border-strong); background: var(--surface-2); }
+  .btn:active { transform: translateY(1px); }
+
+  .btn-primary {
+    background: var(--ink);
+    color: #fafaf9;
+    border-color: var(--ink);
+  }
+  .btn-primary:hover { background: #292524; border-color: #292524; }
+
+  .btn-accent {
+    background: var(--accent);
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+  .btn-accent:hover { background: var(--accent-dark); color: #fafaf9; border-color: var(--accent-dark); }
+
+  .btn-danger {
+    color: var(--danger);
+  }
+  .btn-danger:hover { background: var(--danger-bg); border-color: var(--danger); }
+
+  /* ===== TABLE ===== */
+  .table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .table-scroll {
+    overflow: auto;
+    max-height: calc(100vh - 380px);
+    min-height: 400px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead {
+    background: var(--surface-2);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  th {
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-2); }
+
+  td {
+    padding: 12px 14px;
+    vertical-align: middle;
+  }
+
+  td.col-no { width: 50px; color: var(--text-muted); }
+  td.col-itemno { width: 140px; }
+  td.col-qty { width: 90px; text-align: right; }
+  td.col-status { width: 130px; }
+  td.col-notes { width: 240px; }
+  td.col-photo { width: 70px; text-align: center; }
+  td.col-actions { width: 80px; text-align: right; }
+
+  .item-no-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    background: var(--surface-2);
+    padding: 4px 8px;
+    border-radius: 5px;
+    border: 1px solid var(--border);
+    display: inline-block;
+    color: var(--text);
+  }
+
+  .desc-text {
+    line-height: 1.45;
+    color: var(--text);
+  }
+
+  .qty-negative {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    color: var(--danger);
+  }
+
+  /* Status badges */
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+
+  .status-badge.clear {
+    background: var(--success-bg);
+    color: var(--success);
+    border-color: var(--success-border);
+  }
+  .status-badge.progress {
+    background: var(--warning-bg);
+    color: var(--warning);
+    border-color: var(--warning-border);
+  }
+  .status-badge.pending {
+    background: var(--pending-bg);
+    color: var(--pending);
+    border-color: var(--pending-border);
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .notes-preview {
+    color: var(--text-muted);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    font-size: 12.5px;
+  }
+  .notes-preview.empty {
+    color: var(--text-subtle);
+    font-style: italic;
+  }
+
+  .photo-thumb {
+    width: 44px; height: 44px;
+    border-radius: 6px;
+    object-fit: cover;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    transition: transform 0.15s;
+  }
+  .photo-thumb:hover { transform: scale(1.1); border-color: var(--ink); }
+
+  .photo-empty {
+    width: 44px; height: 44px;
+    border-radius: 6px;
+    border: 1px dashed var(--border-strong);
+    display: inline-grid;
+    place-items: center;
+    color: var(--text-subtle);
+  }
+
+  .btn-edit {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text);
+    transition: all 0.15s;
+  }
+  .btn-edit:hover { background: var(--ink); color: #fafaf9; border-color: var(--ink); }
+
+  .empty-state {
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .empty-state svg { opacity: 0.4; margin-bottom: 12px; }
+
+  .table-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  /* ===== MODAL ===== */
+  .modal-backdrop {
+    position: fixed; inset: 0;
+    background: rgba(28,25,23,0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+    animation: fadeIn 0.15s;
+  }
+  .modal-backdrop.active { display: flex; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .modal {
+    background: var(--surface);
+    border-radius: 14px;
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-width: 620px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .modal-header h3 {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+  }
+
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: grid; place-items: center;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { background: var(--surface-2); color: var(--text); }
+
+  .modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+  }
+
+  .item-summary {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px;
+    margin-bottom: 20px;
+  }
+  .item-summary-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 6px;
+    font-size: 12.5px;
+  }
+  .item-summary-row:last-child { margin-bottom: 0; }
+  .item-summary-row .label {
+    color: var(--text-muted);
+    font-weight: 600;
+    width: 100px;
+    flex-shrink: 0;
+  }
+  .item-summary-row .value { color: var(--text); flex: 1; }
+
+  .field {
+    margin-bottom: 18px;
+  }
+  .field label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+  }
+
+  .status-choices {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .status-choice {
+    position: relative;
+    cursor: pointer;
+  }
+  .status-choice input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .status-choice .choice-inner {
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+    transition: all 0.15s;
+    background: var(--surface);
+  }
+  .status-choice:hover .choice-inner { border-color: var(--border-strong); }
+  .status-choice input:checked + .choice-inner {
+    border-color: var(--ink);
+    background: var(--surface-2);
+    box-shadow: 0 0 0 3px rgba(28,25,23,0.08);
+  }
+  .status-choice .status-badge { margin: 0; }
+
+  textarea {
+    resize: vertical;
+    min-height: 90px;
+    font-family: inherit;
+    font-size: 13.5px;
+  }
+
+  .photo-upload {
+    border: 2px dashed var(--border-strong);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--surface-2);
+  }
+  .photo-upload:hover { border-color: var(--ink); background: var(--surface); }
+  .photo-upload.has-file { border-style: solid; border-color: var(--border); padding: 12px; }
+
+  .photo-upload input { display: none; }
+
+  .photo-upload-placeholder {
+    color: var(--text-muted);
+  }
+  .photo-upload-placeholder svg { margin-bottom: 8px; }
+  .photo-upload-placeholder .main-text { font-weight: 600; color: var(--text); font-size: 13px; }
+  .photo-upload-placeholder .sub-text { font-size: 12px; margin-top: 2px; }
+
+  .photo-preview {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .photo-preview img {
+    width: 100px; height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+  }
+  .photo-preview-info { flex: 1; min-width: 0; text-align: left; }
+  .photo-preview-info .name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .photo-preview-info .size {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    margin-top: 2px;
+  }
+  .photo-preview-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .photo-preview-actions button {
+    padding: 6px 10px;
+    font-size: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--text);
+    font-weight: 600;
+  }
+  .photo-preview-actions button:hover { background: var(--surface-2); }
+  .photo-preview-actions .remove-btn:hover { color: var(--danger); border-color: var(--danger); }
+
+  .modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--border);
+    background: var(--surface-2);
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  /* ===== IMAGE LIGHTBOX ===== */
+  .lightbox {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    cursor: zoom-out;
+    padding: 40px;
+  }
+  .lightbox.active { display: flex; }
+  .lightbox img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: 8px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.5);
+  }
+
+  /* ===== TOAST ===== */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .toast {
+    background: var(--ink);
+    color: #fafaf9;
+    padding: 12px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideInRight 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    min-width: 240px;
+  }
+  .toast.success { background: var(--success); }
+  .toast.error { background: var(--danger); }
+  @keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes slideOutRight {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(20px); }
+  }
+  .toast.leaving { animation: slideOutRight 0.3s; }
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width: 900px) {
+    header { padding: 16px 20px; }
+    main { padding: 16px; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .header-badge { display: none; }
+  }
+  @media (max-width: 600px) {
+    .stats-grid { grid-template-columns: 1fr; }
+    .controls { flex-direction: column; align-items: stretch; }
+    .search-wrap { min-width: 0; }
+    .status-choices { grid-template-columns: 1fr; }
+    td.col-notes { display: none; }
+    td, th { padding: 10px 8px; font-size: 12px; }
+  }
+
+  /* Loading overlay */
+  .loading-overlay {
+    position: fixed; inset: 0;
+    background: rgba(250,250,249,0.85);
+    backdrop-filter: blur(2px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 300;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .loading-overlay.active { display: flex; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--ink);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 13px; font-weight: 600; color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-mark">SP</div>
+    <div class="header-text">
+      <h1>Tracking Item Minus</h1>
+      <p>PT. Saberindo Pacific — Item List Audit</p>
+    </div>
+    <div class="header-badge mono" id="lastUpdated">Siap</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- STATS -->
+  <section class="stats-grid">
+    <div class="stat-card" data-kind="total">
+      <div class="stat-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+      </div>
+      <div class="stat-body">
+        <div class="stat-label">Total Item</div>
+        <div class="stat-value" id="statTotal">0</div>
+        <div class="stat-sub">Item dengan stok minus</div>
+      </div>
+    </div>
+
+    <div class="stat-card" data-kind="clear">
+      <div class="stat-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="stat-body">
+        <div class="stat-label">Clear</div>
+        <div class="stat-value" id="statClear">0</div>
+        <div class="stat-sub">Sudah diselesaikan</div>
+      </div>
+    </div>
+
+    <div class="stat-card" data-kind="progress">
+      <div class="stat-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="stat-body">
+        <div class="stat-label">On Progress</div>
+        <div class="stat-value" id="statProgress">0</div>
+        <div class="stat-sub">Sedang dikerjakan</div>
+      </div>
+    </div>
+
+    <div class="stat-card" data-kind="pending">
+      <div class="stat-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      </div>
+      <div class="stat-body">
+        <div class="stat-label">Pending</div>
+        <div class="stat-value" id="statPending">0</div>
+        <div class="stat-sub">Belum ditangani</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROGRESS BAR -->
+  <section class="progress-wrap">
+    <div class="progress-header">
+      <div class="label">Progress Keseluruhan</div>
+      <div class="value" id="progressText">0%</div>
+    </div>
+    <div class="progress-track">
+      <div class="progress-fill-clear" id="progressFillClear" style="width: 0%"></div>
+      <div class="progress-fill-progress" id="progressFillProgress" style="width: 0%"></div>
+    </div>
+  </section>
+
+  <!-- CONTROLS -->
+  <section class="controls">
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="searchInput" placeholder="Cari item no, deskripsi, atau catatan..." />
+    </div>
+
+    <select id="filterStatus">
+      <option value="all">Semua Status</option>
+      <option value="pending">Pending</option>
+      <option value="progress">On Progress</option>
+      <option value="clear">Clear</option>
+    </select>
+
+    <select id="filterPhoto">
+      <option value="all">Semua Foto</option>
+      <option value="with">Ada Foto</option>
+      <option value="without">Tanpa Foto</option>
+    </select>
+
+    <button class="btn btn-danger" id="btnReset" title="Hapus semua data status, catatan & foto">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+      Reset
+    </button>
+
+    <button class="btn btn-accent" id="btnExport">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export Excel
+    </button>
+  </section>
+
+  <!-- TABLE -->
+  <section class="table-wrap">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="col-no">No.</th>
+            <th class="col-itemno">Item No.</th>
+            <th>Deskripsi</th>
+            <th class="col-qty">Def Qty</th>
+            <th class="col-status">Status</th>
+            <th class="col-notes">Catatan</th>
+            <th class="col-photo">Foto</th>
+            <th class="col-actions"></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+    <div class="table-footer">
+      <span id="tableFooterCount">Menampilkan 0 item</span>
+      <span class="mono" style="font-size: 11px;">Data tersimpan otomatis di browser</span>
+    </div>
+  </section>
+</main>
+
+<!-- EDIT MODAL -->
+<div class="modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit Item</h3>
+      <button class="modal-close" id="modalClose" aria-label="Tutup">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="item-summary">
+        <div class="item-summary-row">
+          <span class="label">Item No.</span>
+          <span class="value mono" id="modalItemNo"></span>
+        </div>
+        <div class="item-summary-row">
+          <span class="label">Deskripsi</span>
+          <span class="value" id="modalDescription"></span>
+        </div>
+        <div class="item-summary-row">
+          <span class="label">Def Qty</span>
+          <span class="value qty-negative mono" id="modalDefQty"></span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Status</label>
+        <div class="status-choices">
+          <label class="status-choice">
+            <input type="radio" name="modalStatus" value="pending" />
+            <div class="choice-inner">
+              <span class="status-badge pending"><span class="status-dot"></span>Pending</span>
+            </div>
+          </label>
+          <label class="status-choice">
+            <input type="radio" name="modalStatus" value="progress" />
+            <div class="choice-inner">
+              <span class="status-badge progress"><span class="status-dot"></span>On Progress</span>
+            </div>
+          </label>
+          <label class="status-choice">
+            <input type="radio" name="modalStatus" value="clear" />
+            <div class="choice-inner">
+              <span class="status-badge clear"><span class="status-dot"></span>Clear</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="modalNotes">Catatan</label>
+        <textarea id="modalNotes" placeholder="Tambah catatan investigasi, penyelesaian, atau keterangan..."></textarea>
+      </div>
+
+      <div class="field">
+        <label>Foto Bukti</label>
+        <label class="photo-upload" id="photoUploadLabel">
+          <input type="file" id="modalPhotoInput" accept="image/*" />
+          <div id="photoUploadContent">
+            <div class="photo-upload-placeholder">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              <div class="main-text">Klik untuk upload foto</div>
+              <div class="sub-text">JPG, PNG, maks 10MB (auto-compress)</div>
+            </div>
+          </div>
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" id="modalCancel">Batal</button>
+      <button class="btn btn-primary" id="modalSave">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <img id="lightboxImg" alt="Foto" />
+</div>
+
+<!-- LOADING OVERLAY -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loadingText">Memproses...</div>
+</div>
+
+<!-- TOASTS -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ============================================================
+ * DATA: 142 items dari file Excel asli
+ * ============================================================ */
+const ITEMS = [
+  { no: 1, itemNo: "8891000451", description: "JOINTING TRAY U H100 C/W MUR BAUT RING HEXA / STAND PLATE", defQty: -3183 },
+  { no: 2, itemNo: "8891000450", description: "COVER CLAMP W100XH100 MM C/W MUR BAUT RING HEXA", defQty: -2701 },
+  { no: 3, itemNo: "8891000452", description: "KABEL LADDER TYPE U - TEBAL BAHAN 2 MM W300XH100XL3000 MM", defQty: -1450 },
+  { no: 4, itemNo: "5KNYA112HKMIM", description: "KABEL NYA 1-1/2 MM WARNA HITAM IN METER \"KABELMETAL INDONESIA\"", defQty: -1123 },
+  { no: 5, itemNo: "8891000453", description: "COVER LADDER TEBAL BAHAN 2 MM W300XL3000 MM", defQty: -1072 },
+  { no: 6, itemNo: "8891000441", description: "COVER KABEL TRAY PERFORATED TYPE U - SIZE: W100XL3000MM", defQty: -1050 },
+  { no: 7, itemNo: "8891000461", description: "SPLICE PLATE LADDER / JOINTING LADDER U H100 C/W MUR BAUT RING HEXA", defQty: -1042 },
+  { no: 8, itemNo: "4ABM12X80", description: "ANCHOR BOLT SS304 SIZE M12 X 80MM, C/W NUT (2) + WASHER", defQty: -976 },
+  { no: 9, itemNo: "2GCG3ULFMG", description: "GRINNEL COUPLING GROOVED 3\" UL/FM APPROVED FIG.577", defQty: -665 },
+  { no: 10, itemNo: "5SCLCE19", description: "SADLE CLAMP CONDUIT STEEL E19 \"WAHANA\"", defQty: -500 },
+  { no: 11, itemNo: "3AVV15BSPT", description: "ANGLE VALVE 1/2\" BSPT", defQty: -376 },
+  { no: 12, itemNo: "FFNKH12C1", description: "FIRE HOSE NOZZLE 1-1/2\"", defQty: -372 },
+  { no: 13, itemNo: "5SCE19", description: "STEEL CONDUIT E19 MM X 3800 MM \"WAHANA\"", defQty: -257 },
+  { no: 14, itemNo: "8891000481", description: "BRACKET SUPPORT KABEL TRAY 100 MM", defQty: -201 },
+  { no: 15, itemNo: "8891000493", description: "SUPPORT KABEL TRAY WALL MOUNTED 300 MM", defQty: -185 },
+  { no: 16, itemNo: "B250FCT", description: "FIRE CYLINDER TRACE TAPE", defQty: -179 },
+  { no: 17, itemNo: "B200SDT", description: "SPRINKLER DROP TAG", defQty: -168 },
+  { no: 18, itemNo: "4AN12B", description: "ANCHOR NUT M12 BSP", defQty: -165 },
+  { no: 19, itemNo: "2PTUBE2X6", description: "PIPE TUBING 2\" X 6 METER SCHEDULE 40", defQty: -160 },
+  { no: 20, itemNo: "5EEC10", description: "ELBOW EMT CONDUIT 1\" / 25 MM", defQty: -150 },
+  { no: 21, itemNo: "GSMMT1210", description: "GI SMS MALE THREAD 1/2\" X 1\"", defQty: -144 },
+  { no: 22, itemNo: "PROJ-SPR-003", description: "SPRINKLER PENDENT TYVA 1/2\", K=5.6, RESPONSE: QUICK", defQty: -130 },
+  { no: 23, itemNo: "2PGLSR1214X3MJ", description: "PIPE GALVANIS SCH 40 MEDIUM 1-1/4\" X 6M BJS JIS G3452", defQty: -127 },
+  { no: 24, itemNo: "2KVCH", description: "KUPANG VALVE CHECK", defQty: -120 },
+  { no: 25, itemNo: "8891000494", description: "SUPPORT KABEL TRAY WALL MOUNTED 600 MM", defQty: -111 },
+  { no: 26, itemNo: "2TEE3X3", description: "TEE 3\" X 3\" EQUAL GROOVED ONLY", defQty: -108 },
+  { no: 27, itemNo: "2PGLSR112X6MJ", description: "PIPE GALVANIS SCH 40 MEDIUM 1-1/2\" X 6M BJS JIS G3452", defQty: -108 },
+  { no: 28, itemNo: "FHRCNEOL", description: "FIRE HOSE REEL NOZZLE", defQty: -106 },
+  { no: 29, itemNo: "2GEL1X90", description: "GROOVED ELBOW 1\" X 90 DEG", defQty: -100 },
+  { no: 30, itemNo: "4PNUT1216", description: "U-NUT 12 X 16 MM", defQty: -92 },
+  { no: 31, itemNo: "2MC1812", description: "MALLEABLE COUPLING REDUCER 3/4\" X 1/2\"", defQty: -90 },
+  { no: 32, itemNo: "8891000465", description: "JOINTING LADDER TYPE U H100", defQty: -90 },
+  { no: 33, itemNo: "PROJ-SPR-002", description: "SPRINKLER UPRIGHT TYVA 1/2\", K=5.6, RESPONSE: QUICK", defQty: -87 },
+  { no: 34, itemNo: "2GELBR3X3", description: "GROOVED ELBOW REDUCER 3\" X 2\"", defQty: -85 },
+  { no: 35, itemNo: "2CP3", description: "COUPLING PIPE 3\"", defQty: -83 },
+  { no: 36, itemNo: "2NEC3X3", description: "NIPPLE ECCENTRIC 3\" X 2\"", defQty: -75 },
+  { no: 37, itemNo: "2FLNDN80", description: "FLANGE DN 80 / 3\" SLIP ON RAISED FACE", defQty: -72 },
+  { no: 38, itemNo: "2ELG1212", description: "ELBOW GALVANIS 1/2\" X 1/2\"", defQty: -70 },
+  { no: 39, itemNo: "2GEL2X45", description: "GROOVED ELBOW 2\" X 45 DEG", defQty: -64 },
+  { no: 40, itemNo: "2CG20ELC", description: "CONCENTRIC ELBOW GALV 20MM", defQty: -60 },
+  { no: 41, itemNo: "5GKLO38", description: "GLAND KABEL LOCKNUT 3/8\"", defQty: -60 },
+  { no: 42, itemNo: "4BP10125", description: "BAUT PAN HEAD M10 X 125 MM", defQty: -58 },
+  { no: 43, itemNo: "4BP10100", description: "BAUT PAN HEAD M10 X 100 MM", defQty: -56 },
+  { no: 44, itemNo: "5CJBUXO", description: "CABLE JACKET BOX UNIV. OUT", defQty: -54 },
+  { no: 45, itemNo: "8891000443", description: "COVER KABEL TRAY PERFORATED TYPE U - SIZE: W300XL3000MM", defQty: -52 },
+  { no: 46, itemNo: "2GCG2ULFMG", description: "GRINNEL COUPLING GROOVED 2\" UL/FM APPROVED FIG.577", defQty: -50 },
+  { no: 47, itemNo: "2NIPP3X5C", description: "NIPPLE 3\" X 5 CM", defQty: -48 },
+  { no: 48, itemNo: "8891000491", description: "SUPPORT KABEL TRAY WALL MOUNTED 100 MM", defQty: -46 },
+  { no: 49, itemNo: "4BH8X50", description: "BAUT HEXA M8 X 50 MM", defQty: -45 },
+  { no: 50, itemNo: "FFHCXX25", description: "FIRE HOSE CANVAS 2.5\" X 30M", defQty: -44 },
+  { no: 51, itemNo: "PROJ-FM200-010", description: "FM200 CONTAINER 67.5 LITER C/W VALVE & FITTING", defQty: -42 },
+  { no: 52, itemNo: "5CTPVCWHT", description: "CABLE TIE PVC WHITE", defQty: -40 },
+  { no: 53, itemNo: "2GEL3X45", description: "GROOVED ELBOW 3\" X 45 DEG", defQty: -40 },
+  { no: 54, itemNo: "5LAMPLED", description: "LAMPU LED 5W PUTIH", defQty: -38 },
+  { no: 55, itemNo: "2CP2", description: "COUPLING PIPE 2\"", defQty: -36 },
+  { no: 56, itemNo: "2NEC2X1", description: "NIPPLE ECCENTRIC 2\" X 1\"", defQty: -35 },
+  { no: 57, itemNo: "4SPG20", description: "SPRING GROOVED 20 CM", defQty: -32 },
+  { no: 58, itemNo: "FFHCXX15", description: "FIRE HOSE CANVAS 1.5\" X 30M", defQty: -30 },
+  { no: 59, itemNo: "2PTEE1X1", description: "PIPE TEE 1\" X 1\" EQUAL", defQty: -28 },
+  { no: 60, itemNo: "3GV15WHL", description: "GLOBE VALVE 1/2\" WHEEL", defQty: -27 },
+  { no: 61, itemNo: "5PVCTBE25", description: "PVC TUBE E25 X 2.9 METER", defQty: -26 },
+  { no: 62, itemNo: "2BCKVL3", description: "BUTTERFLY CHECK VALVE 3\"", defQty: -25 },
+  { no: 63, itemNo: "FFDCR1X", description: "FIRE DEPARTMENT CONNECTION 1-WAY", defQty: -24 },
+  { no: 64, itemNo: "PROJ-PUMP-003", description: "ELECTRIC JOCKEY PUMP 3KW 3PH 50HZ, HEAD: 90M, CAP: 25LPM", defQty: -22 },
+  { no: 65, itemNo: "2PGEBR15X14", description: "PIPE GALVANIS ELBOW REDUCER 1.5\" X 1.25\"", defQty: -20 },
+  { no: 66, itemNo: "5KNYA25HKMIM", description: "KABEL NYA 2.5 MM WARNA HITAM IN METER KABELMETAL INDONESIA", defQty: -20 },
+  { no: 67, itemNo: "4SLBRKT75", description: "SLOT BRACKET 75 MM STAINLESS STEEL", defQty: -18 },
+  { no: 68, itemNo: "2PGLSR2X6MJ", description: "PIPE GALVANIS SCH 40 MEDIUM 2\" X 6M BJS JIS G3452", defQty: -18 },
+  { no: 69, itemNo: "4HGRCLP50", description: "HEX GEAR CLAMP 50 MM", defQty: -16 },
+  { no: 70, itemNo: "B300LBLFP", description: "LABEL FIRE PUMP STAINLESS STEEL 300 MM", defQty: -15 },
+  { no: 71, itemNo: "2NEC4X3", description: "NIPPLE ECCENTRIC 4\" X 3\"", defQty: -14 },
+  { no: 72, itemNo: "5CBL25MM2BK", description: "CABLE NYY 2.5 SQMM 3 CORE BLACK \"SUPREME\"", defQty: -12 },
+  { no: 73, itemNo: "FCPCNL2WAY", description: "FIRE CONTROL PANEL CONVENTIONAL 2 ZONE", defQty: -10 },
+  { no: 74, itemNo: "2GEL4X90", description: "GROOVED ELBOW 4\" X 90 DEG", defQty: -10 },
+  { no: 75, itemNo: "PROJ-VLV-008", description: "OS&Y GATE VALVE 4\" UL/FM", defQty: -10 },
+  { no: 76, itemNo: "5PBBOX4X4", description: "PULL BOX 4\" X 4\" X 2.5\" GALVANIZED", defQty: -9 },
+  { no: 77, itemNo: "4BL10X80SS", description: "BAUT L M10 X 80 SS304", defQty: -9 },
+  { no: 78, itemNo: "2FCC3GROOVE", description: "FLEX COUPLING 3\" GROOVED", defQty: -8 },
+  { no: 79, itemNo: "5SPLC4X4MMS", description: "SPLITTER 4 X 4 MM SOCKET MILD STEEL", defQty: -8 },
+  { no: 80, itemNo: "PROJ-DS-001", description: "DETECTOR SMOKE OPTICAL, 24V, KIDDE", defQty: -8 },
+  { no: 81, itemNo: "FFSWC1X", description: "FLOW SWITCH 1\" W/O RETARD", defQty: -7 },
+  { no: 82, itemNo: "FFSIREN", description: "FIRE SIREN OUTDOOR 24V DC RED", defQty: -7 },
+  { no: 83, itemNo: "B150VALTAG", description: "VALVE TAG ALUMINIUM 150 MM", defQty: -7 },
+  { no: 84, itemNo: "5CBL4MM4CB", description: "CABLE NYY 4 SQMM 4 CORE \"SUPREME\"", defQty: -6 },
+  { no: 85, itemNo: "4STUD20MM", description: "STUD BOLT M20 X 100 MM", defQty: -6 },
+  { no: 86, itemNo: "2PGT3X125", description: "PIPE GALVANIS TEE 3\" X 1.25\"", defQty: -6 },
+  { no: 87, itemNo: "PROJ-CALL-002", description: "MANUAL CALL POINT, 24V, ADDRESSABLE", defQty: -6 },
+  { no: 88, itemNo: "5CLAMPOU75", description: "CABLE CLAMP OUTDOOR 75 MM", defQty: -6 },
+  { no: 89, itemNo: "FCPCNL4WAY", description: "FIRE CONTROL PANEL CONVENTIONAL 4 ZONE", defQty: -5 },
+  { no: 90, itemNo: "2PGCAP3", description: "PIPE GALVANIS CAP 3\"", defQty: -5 },
+  { no: 91, itemNo: "FFVOCXX25", description: "FIRE VALVE OUTLET COUPLING 2.5\"", defQty: -5 },
+  { no: 92, itemNo: "2BKBFV4UL", description: "BUTTERFLY VALVE 4\" UL/FM", defQty: -5 },
+  { no: 93, itemNo: "2NEC6X4", description: "NIPPLE ECCENTRIC 6\" X 4\"", defQty: -4 },
+  { no: 94, itemNo: "5PKPVC1X1", description: "PVC JUNCTION BOX 1\" X 1\"", defQty: -4 },
+  { no: 95, itemNo: "PROJ-HEAT-001", description: "HEAT DETECTOR ROR TYPE, 24V", defQty: -4 },
+  { no: 96, itemNo: "B450SIGNSR", description: "SIGN SIAMESE CONNECTION STAINLESS 450 MM", defQty: -4 },
+  { no: 97, itemNo: "PROJ-STR-005", description: "STROBE LIGHT RED 24V DC, FLASH", defQty: -4 },
+  { no: 98, itemNo: "PROJ-HORN-003", description: "HORN STROBE WHITE/RED 24V DC", defQty: -4 },
+  { no: 99, itemNo: "FFSWC2", description: "FLOW SWITCH 2\" W/RETARD", defQty: -3 },
+  { no: 100, itemNo: "FFSWC3X", description: "FLOW SWITCH 3\" W/RETARD", defQty: -3 },
+  { no: 101, itemNo: "2VLAL150", description: "ALARM VALVE 150 MM DRY", defQty: -3 },
+  { no: 102, itemNo: "PROJ-PS-001", description: "PRESSURE SWITCH, 0-20 BAR, SPDT", defQty: -3 },
+  { no: 103, itemNo: "5KVASSR10A", description: "KABEL VSR SOLID STATE RELAY 10A 240V", defQty: -3 },
+  { no: 104, itemNo: "4GASK4", description: "GASKET GROOVED 4\" SET", defQty: -3 },
+  { no: 105, itemNo: "PROJ-BZR-001", description: "BUZZER 24V DC RED, 92 DB", defQty: -3 },
+  { no: 106, itemNo: "FFPGAUG0300", description: "PRESSURE GAUGE 0-300 PSI 1/4\" BOTTOM CONNECTION", defQty: -3 },
+  { no: 107, itemNo: "5LAMPFLUOR", description: "LAMPU FLUORESCENT TL 20W, 220V", defQty: -2 },
+  { no: 108, itemNo: "4CLMRANK50", description: "CLAMP RANKING 50 MM TYPE M", defQty: -2 },
+  { no: 109, itemNo: "2PGU1", description: "PIPE GALVANIS UNION 1\"", defQty: -2 },
+  { no: 110, itemNo: "2CPVC112", description: "COUPLING PVC 1.5\"", defQty: -2 },
+  { no: 111, itemNo: "5CBL4MM3CB", description: "CABLE NYY 4 SQMM 3 CORE \"SUPREME\"", defQty: -2 },
+  { no: 112, itemNo: "PROJ-HOSEREL", description: "FIRE HOSE REEL W/CABINET, 30M HOSE", defQty: -2 },
+  { no: 113, itemNo: "PROJ-INDI-003", description: "INDICATOR POST, UL/FM APPROVED", defQty: -2 },
+  { no: 114, itemNo: "4CLMHVY100", description: "CLAMP HEAVY DUTY 100 MM", defQty: -2 },
+  { no: 115, itemNo: "2PGPLG2", description: "PIPE GALVANIS PLUG 2\"", defQty: -2 },
+  { no: 116, itemNo: "PROJ-VLV-012", description: "BALL VALVE 2\" FEMALE BSP BRASS", defQty: -2 },
+  { no: 117, itemNo: "4BTMALHX12", description: "BAUT MACHINE HEX M12 X 50 MM", defQty: -2 },
+  { no: 118, itemNo: "PROJ-TEE-006", description: "TEE REDUCER GROOVED 4\" X 3\" X 4\"", defQty: -2 },
+  { no: 119, itemNo: "FFCAB03", description: "FIRE CABINET OUTDOOR, 800X600X250MM, W/GLASS", defQty: -2 },
+  { no: 120, itemNo: "PROJ-VLV-015", description: "CHECK VALVE SWING 6\" UL/FM, FLANGED", defQty: -1 },
+  { no: 121, itemNo: "2PGEL6X90", description: "PIPE GALVANIS ELBOW 6\" X 90 DEG", defQty: -1 },
+  { no: 122, itemNo: "2PGTEE6X4", description: "PIPE GALVANIS TEE 6\" X 4\"", defQty: -1 },
+  { no: 123, itemNo: "PROJ-FP-001", description: "FIRE PUMP DIESEL DRIVEN, 500GPM, HEAD: 80M, UL/FM", defQty: -1 },
+  { no: 124, itemNo: "PROJ-FP-002", description: "FIRE PUMP ELECTRIC DRIVEN, 500GPM, HEAD: 80M, UL/FM", defQty: -1 },
+  { no: 125, itemNo: "PROJ-TANK-001", description: "WATER STORAGE TANK FIBERGLASS, 20 M3", defQty: -1 },
+  { no: 126, itemNo: "5CBL25MM4CB", description: "CABLE NYY 2.5 SQMM 4 CORE \"SUPREME\"", defQty: -1 },
+  { no: 127, itemNo: "PROJ-PAN-004", description: "PANEL FIRE ALARM MAIN CONTROL 10 ZONE, NITTAN", defQty: -1 },
+  { no: 128, itemNo: "PROJ-BATT-002", description: "BATTERY 12V 7AH SEALED LEAD ACID, PANASONIC", defQty: -1 },
+  { no: 129, itemNo: "PROJ-FM200-011", description: "FM200 NOZZLE 1\", 180 DEG DISCHARGE", defQty: -1 },
+  { no: 130, itemNo: "PROJ-FM200-012", description: "FM200 MANIFOLD 2\" DN50 X 3 OUTLET", defQty: -1 },
+  { no: 131, itemNo: "PROJ-CO2-003", description: "CO2 CYLINDER 45KG, SEAMLESS STEEL, 150 BAR WP", defQty: -1 },
+  { no: 132, itemNo: "PROJ-EXT-010", description: "FIRE EXTINGUISHER CO2 6.8 KG, STAINLESS STEEL", defQty: -1 },
+  { no: 133, itemNo: "PROJ-NAMETAG-001", description: "NAME TAG BAHAN ACRYLIC, SIZE : 200 MM X 70 MM", defQty: -1 },
+  { no: 134, itemNo: "388249", description: "TORNATECH ELECTRIC FIRE PUMP CONTROL PANEL, MODEL: GFY-380/220/2/50, POWER: 220HP 380V 3 PHASE 50HZ, SERIAL: B 104470, CONTROL PANEL UNIT I/O", defQty: -1 },
+  { no: 135, itemNo: "8891000469", description: "HUB SWITCH 220 VAC 8 PORT, CISCO", defQty: -1 },
+  { no: 136, itemNo: "9191820041", description: "FIRETRACE SINGLE PRESSURE SWITCH ASSEMBLY, FOR DISCHARGER OR SERVICE MONITORING END OFF LINE, PN : 400004", defQty: -1 },
+  { no: 137, itemNo: "2008010018", description: "SABRE FIRE HOSE CANVAS 2.5\" X 30M, 13 BAR, MACHINO COUPLING", defQty: -1 },
+  { no: 138, itemNo: "2TUNI150BSPT1", description: "UNION 1\" #150 BSPT MALLEABLE IRON \"TSP\"", defQty: -1 },
+  { no: 139, itemNo: "2017001354", description: "OLI SAE 10W/40 @ 4 LITER", defQty: -1 },
+  { no: 140, itemNo: "2017001355", description: "OLI GEARBOX POMPA : SAE 10W/40 KAP. 1 LITER/BOTOL", defQty: -1 },
+  { no: 141, itemNo: "PROJ-FC-002", description: "FOAM TANK 140L, 1200(L) X 400(W) X 300(H), STAINLESS STEEL 2MM", defQty: -1 },
+  { no: 142, itemNo: "1512000003", description: "MANHOLE 26\"", defQty: -1 }
+];
+
+/* ============================================================
+ * INDEXEDDB WRAPPER
+ * ============================================================ */
+const DB_NAME = 'saberindo_item_tracker';
+const DB_VERSION = 1;
+const STORE = 'itemStates';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        db.createObjectStore(STORE, { keyPath: 'itemNo' });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getAllStates() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readonly');
+    const req = tx.objectStore(STORE).getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveStateRecord(record) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).put(record);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function deleteStateRecord(itemNo) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).delete(itemNo);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function clearAllStates() {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+/* ============================================================
+ * STATE
+ * ============================================================ */
+// states: Map dari itemNo → { status, notes, photoDataUrl, photoName, photoSize, updatedAt }
+const states = new Map();
+let currentEditItemNo = null;
+let pendingPhoto = null; // { dataUrl, name, size }
+
+/* ============================================================
+ * UTILITIES
+ * ============================================================ */
+function $(sel) { return document.querySelector(sel); }
+function $$(sel) { return document.querySelectorAll(sel); }
+
+function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024*1024) return (bytes/1024).toFixed(1) + ' KB';
+  return (bytes/(1024*1024)).toFixed(2) + ' MB';
+}
+
+function getState(itemNo) {
+  return states.get(itemNo) || { status: 'pending', notes: '', photoDataUrl: null, photoName: null };
+}
+
+function getStatusLabel(status) {
+  return { clear: 'CLEAR', progress: 'ON PROGRESS', pending: 'PENDING' }[status] || 'PENDING';
+}
+
+/* ===== TOAST ===== */
+function toast(message, type = 'default') {
+  const container = $('#toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  const icon = type === 'success'
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
+    : type === 'error'
+    ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>';
+  el.innerHTML = icon + '<span>' + escapeHtml(message) + '</span>';
+  container.appendChild(el);
+  setTimeout(() => {
+    el.classList.add('leaving');
+    setTimeout(() => el.remove(), 300);
+  }, 2500);
+}
+
+/* ===== LOADING OVERLAY ===== */
+function setLoading(active, text = 'Memproses...') {
+  $('#loadingText').textContent = text;
+  $('#loadingOverlay').classList.toggle('active', active);
+}
+
+/* ============================================================
+ * IMAGE COMPRESSION
+ * ============================================================ */
+function compressImage(file, maxDim = 1600, quality = 0.85) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const ratio = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(dataUrl);
+      };
+      img.onerror = () => reject(new Error('Gagal memuat gambar'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Gagal membaca file'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ============================================================
+ * RENDER
+ * ============================================================ */
+function updateStats() {
+  let clear = 0, progress = 0, pending = 0;
+  for (const item of ITEMS) {
+    const s = states.get(item.itemNo);
+    if (s && s.status === 'clear') clear++;
+    else if (s && s.status === 'progress') progress++;
+    else pending++;
+  }
+  const total = ITEMS.length;
+  $('#statTotal').textContent = total;
+  $('#statClear').textContent = clear;
+  $('#statProgress').textContent = progress;
+  $('#statPending').textContent = pending;
+
+  const clearPct = total ? (clear / total * 100) : 0;
+  const progPct = total ? (progress / total * 100) : 0;
+  $('#progressFillClear').style.width = clearPct + '%';
+  $('#progressFillProgress').style.width = progPct + '%';
+  $('#progressText').textContent = `${clear} / ${total} Clear • ${Math.round(clearPct)}%`;
+}
+
+function statusBadge(status) {
+  const labels = { clear: 'Clear', progress: 'On Progress', pending: 'Pending' };
+  return `<span class="status-badge ${status}"><span class="status-dot"></span>${labels[status]}</span>`;
+}
+
+function renderTable() {
+  const searchTerm = $('#searchInput').value.trim().toLowerCase();
+  const statusFilter = $('#filterStatus').value;
+  const photoFilter = $('#filterPhoto').value;
+
+  const filtered = ITEMS.filter(item => {
+    const s = getState(item.itemNo);
+    // search
+    if (searchTerm) {
+      const hay = (item.itemNo + ' ' + item.description + ' ' + (s.notes || '')).toLowerCase();
+      if (!hay.includes(searchTerm)) return false;
+    }
+    // status
+    if (statusFilter !== 'all' && s.status !== statusFilter) return false;
+    // photo
+    if (photoFilter === 'with' && !s.photoDataUrl) return false;
+    if (photoFilter === 'without' && s.photoDataUrl) return false;
+    return true;
+  });
+
+  const tbody = $('#tableBody');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="8" class="empty-state">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <div>Tidak ada item yang cocok dengan filter.</div>
+    </td></tr>`;
+  } else {
+    tbody.innerHTML = filtered.map(item => {
+      const s = getState(item.itemNo);
+      const photoCell = s.photoDataUrl
+        ? `<img class="photo-thumb" src="${s.photoDataUrl}" alt="Foto" data-view="${escapeHtml(item.itemNo)}" />`
+        : `<span class="photo-empty"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></span>`;
+      const notesCell = s.notes
+        ? `<div class="notes-preview">${escapeHtml(s.notes)}</div>`
+        : `<div class="notes-preview empty">—</div>`;
+
+      return `<tr>
+        <td class="col-no mono">${item.no}</td>
+        <td class="col-itemno"><span class="item-no-chip">${escapeHtml(item.itemNo)}</span></td>
+        <td><div class="desc-text">${escapeHtml(item.description)}</div></td>
+        <td class="col-qty qty-negative">${item.defQty.toLocaleString('id-ID')}</td>
+        <td class="col-status">${statusBadge(s.status)}</td>
+        <td class="col-notes">${notesCell}</td>
+        <td class="col-photo">${photoCell}</td>
+        <td class="col-actions">
+          <button class="btn-edit" data-edit="${escapeHtml(item.itemNo)}">Edit</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  $('#tableFooterCount').textContent = `Menampilkan ${filtered.length} dari ${ITEMS.length} item`;
+}
+
+function renderAll() {
+  updateStats();
+  renderTable();
+}
+
+/* ============================================================
+ * MODAL
+ * ============================================================ */
+function openModal(itemNo) {
+  const item = ITEMS.find(i => i.itemNo === itemNo);
+  if (!item) return;
+  currentEditItemNo = itemNo;
+  const s = getState(itemNo);
+
+  $('#modalItemNo').textContent = item.itemNo;
+  $('#modalDescription').textContent = item.description;
+  $('#modalDefQty').textContent = item.defQty.toLocaleString('id-ID');
+
+  // status
+  $$('input[name="modalStatus"]').forEach(r => {
+    r.checked = (r.value === s.status);
+  });
+
+  // notes
+  $('#modalNotes').value = s.notes || '';
+
+  // photo
+  pendingPhoto = s.photoDataUrl
+    ? { dataUrl: s.photoDataUrl, name: s.photoName, size: s.photoSize }
+    : null;
+  renderPhotoUpload();
+
+  $('#modalBackdrop').classList.add('active');
+  setTimeout(() => $('#modalNotes').focus(), 100);
+}
+
+function closeModal() {
+  $('#modalBackdrop').classList.remove('active');
+  currentEditItemNo = null;
+  pendingPhoto = null;
+  $('#modalPhotoInput').value = '';
+}
+
+function renderPhotoUpload() {
+  const label = $('#photoUploadLabel');
+  const content = $('#photoUploadContent');
+  if (pendingPhoto) {
+    label.classList.add('has-file');
+    content.innerHTML = `
+      <div class="photo-preview">
+        <img src="${pendingPhoto.dataUrl}" alt="Preview" />
+        <div class="photo-preview-info">
+          <div class="name">${escapeHtml(pendingPhoto.name || 'foto.jpg')}</div>
+          <div class="size">${formatBytes(pendingPhoto.size || pendingPhoto.dataUrl.length)}</div>
+          <div class="photo-preview-actions">
+            <button type="button" id="btnReplacePhoto">Ganti</button>
+            <button type="button" class="remove-btn" id="btnRemovePhoto">Hapus</button>
+          </div>
+        </div>
+      </div>`;
+    $('#btnReplacePhoto').addEventListener('click', (e) => {
+      e.preventDefault();
+      $('#modalPhotoInput').click();
+    });
+    $('#btnRemovePhoto').addEventListener('click', (e) => {
+      e.preventDefault();
+      pendingPhoto = null;
+      $('#modalPhotoInput').value = '';
+      renderPhotoUpload();
+    });
+  } else {
+    label.classList.remove('has-file');
+    content.innerHTML = `
+      <div class="photo-upload-placeholder">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <div class="main-text">Klik untuk upload foto</div>
+        <div class="sub-text">JPG, PNG, maks 10MB (auto-compress)</div>
+      </div>`;
+  }
+}
+
+async function handlePhotoChange(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    toast('File harus berupa gambar', 'error');
+    return;
+  }
+  if (file.size > 10 * 1024 * 1024) {
+    toast('Ukuran file maksimum 10MB', 'error');
+    return;
+  }
+  setLoading(true, 'Memproses foto...');
+  try {
+    const dataUrl = await compressImage(file);
+    pendingPhoto = {
+      dataUrl,
+      name: file.name,
+      size: Math.round(dataUrl.length * 0.75)  // base64 → bytes approx
+    };
+    renderPhotoUpload();
+  } catch (err) {
+    toast('Gagal memproses foto: ' + err.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function saveModal() {
+  if (!currentEditItemNo) return;
+  const status = document.querySelector('input[name="modalStatus"]:checked')?.value || 'pending';
+  const notes = $('#modalNotes').value.trim();
+
+  const record = {
+    itemNo: currentEditItemNo,
+    status,
+    notes,
+    photoDataUrl: pendingPhoto?.dataUrl || null,
+    photoName: pendingPhoto?.name || null,
+    photoSize: pendingPhoto?.size || null,
+    updatedAt: new Date().toISOString()
+  };
+
+  // Jika semuanya kosong (pending, no notes, no photo) → hapus dari DB
+  const isEmpty = status === 'pending' && !notes && !pendingPhoto;
+
+  setLoading(true, 'Menyimpan...');
+  try {
+    if (isEmpty) {
+      await deleteStateRecord(currentEditItemNo);
+      states.delete(currentEditItemNo);
+    } else {
+      await saveStateRecord(record);
+      states.set(currentEditItemNo, record);
+    }
+    renderAll();
+    closeModal();
+    toast('Perubahan disimpan', 'success');
+    updateLastUpdated();
+  } catch (err) {
+    toast('Gagal menyimpan: ' + err.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+/* ============================================================
+ * EXCEL EXPORT (dengan embedded photos!)
+ * ============================================================ */
+async function exportToExcel() {
+  setLoading(true, 'Membuat file Excel...');
+  try {
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'PT. Saberindo Pacific';
+    workbook.created = new Date();
+
+    const sheet = workbook.addWorksheet('Item Tracking', {
+      views: [{ state: 'frozen', ySplit: 3 }]
+    });
+
+    // Title rows
+    sheet.mergeCells('A1:H1');
+    sheet.getCell('A1').value = 'PT. SABERINDO PACIFIC — TRACKING ITEM MINUS';
+    sheet.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FF0C0A09' } };
+    sheet.getCell('A1').alignment = { horizontal: 'center', vertical: 'middle' };
+    sheet.getRow(1).height = 24;
+
+    sheet.mergeCells('A2:H2');
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+    sheet.getCell('A2').value = `Update per ${dateStr}`;
+    sheet.getCell('A2').font = { italic: true, size: 10, color: { argb: 'FF78716C' } };
+    sheet.getCell('A2').alignment = { horizontal: 'center' };
+    sheet.getRow(2).height = 18;
+
+    // Header row
+    const headerRow = sheet.getRow(3);
+    const headers = ['No.', 'Item No.', 'Deskripsi', 'Def Qty', 'Status', 'Catatan', 'Foto', 'Nama File Foto'];
+    headerRow.values = headers;
+    headerRow.eachCell((cell) => {
+      cell.font = { bold: true, size: 10, color: { argb: 'FFFAFAF9' } };
+      cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0C0A09' } };
+      cell.alignment = { horizontal: 'center', vertical: 'middle' };
+      cell.border = {
+        top: { style: 'thin', color: { argb: 'FF44403C' } },
+        left: { style: 'thin', color: { argb: 'FF44403C' } },
+        bottom: { style: 'thin', color: { argb: 'FF44403C' } },
+        right: { style: 'thin', color: { argb: 'FF44403C' } }
+      };
+    });
+    headerRow.height = 22;
+
+    // Column widths
+    sheet.columns = [
+      { width: 5 },    // No
+      { width: 18 },   // Item No
+      { width: 60 },   // Description
+      { width: 10 },   // Qty
+      { width: 14 },   // Status
+      { width: 40 },   // Notes
+      { width: 14 },   // Foto (image column)
+      { width: 30 }    // Photo filename
+    ];
+
+    // Data rows
+    const statusColors = {
+      clear:    { bg: 'FFECFDF5', fg: 'FF059669' },
+      progress: { bg: 'FFFFFBEB', fg: 'FFD97706' },
+      pending:  { bg: 'FFF5F5F4', fg: 'FF78716C' }
+    };
+
+    let rowIdx = 4;
+    for (const item of ITEMS) {
+      const s = getState(item.itemNo);
+      const row = sheet.getRow(rowIdx);
+      row.values = [
+        item.no,
+        item.itemNo,
+        item.description,
+        item.defQty,
+        getStatusLabel(s.status),
+        s.notes || '',
+        '', // photo cell - will be filled with image
+        s.photoName || '-'
+      ];
+
+      // Row styling
+      row.eachCell((cell, colNumber) => {
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FFE7E5E4' } },
+          left: { style: 'thin', color: { argb: 'FFE7E5E4' } },
+          bottom: { style: 'thin', color: { argb: 'FFE7E5E4' } },
+          right: { style: 'thin', color: { argb: 'FFE7E5E4' } }
+        };
+        cell.font = { size: 10, color: { argb: 'FF1C1917' } };
+        cell.alignment = { vertical: 'middle', wrapText: true };
+      });
+
+      // Specific alignments
+      row.getCell(1).alignment = { horizontal: 'center', vertical: 'middle' };
+      row.getCell(2).font = { size: 10, name: 'Consolas', color: { argb: 'FF1C1917' } };
+      row.getCell(4).alignment = { horizontal: 'right', vertical: 'middle' };
+      row.getCell(4).font = { size: 10, bold: true, color: { argb: 'FFDC2626' }, name: 'Consolas' };
+      row.getCell(4).numFmt = '#,##0;[Red]-#,##0';
+
+      // Status cell styling
+      const statusCell = row.getCell(5);
+      const colors = statusColors[s.status] || statusColors.pending;
+      statusCell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: colors.bg } };
+      statusCell.font = { size: 9, bold: true, color: { argb: colors.fg } };
+      statusCell.alignment = { horizontal: 'center', vertical: 'middle' };
+
+      // Embed photo if exists
+      if (s.photoDataUrl) {
+        try {
+          // Extract base64 part + detect extension
+          const match = s.photoDataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
+          if (match) {
+            const ext = match[1].toLowerCase();
+            const validExt = ['jpeg', 'jpg', 'png', 'gif'].includes(ext) ? (ext === 'jpg' ? 'jpeg' : ext) : 'jpeg';
+            const imageId = workbook.addImage({
+              base64: match[2],
+              extension: validExt
+            });
+            // Place image in column G (index 6 in 0-based)
+            sheet.addImage(imageId, {
+              tl: { col: 6.05, row: rowIdx - 1 + 0.05 },
+              ext: { width: 82, height: 82 },
+              editAs: 'oneCell'
+            });
+            // Set row height to fit image
+            row.height = 68;
+          }
+        } catch (imgErr) {
+          console.warn('Gagal embed foto untuk', item.itemNo, imgErr);
+        }
+      } else {
+        row.height = 20;
+      }
+
+      rowIdx++;
+    }
+
+    // Generate filename
+    const ts = today.toISOString().slice(0,10).replace(/-/g,'');
+    const filename = `Tracking_Item_Minus_${ts}.xlsx`;
+
+    // Write buffer and trigger download
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast('Excel berhasil di-export', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Gagal export Excel: ' + err.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+/* ============================================================
+ * RESET
+ * ============================================================ */
+async function resetAll() {
+  if (!confirm('Hapus SEMUA data status, catatan, dan foto?\n\nAksi ini tidak bisa dibatalkan.')) {
+    return;
+  }
+  setLoading(true, 'Menghapus...');
+  try {
+    await clearAllStates();
+    states.clear();
+    renderAll();
+    toast('Data berhasil direset', 'success');
+    updateLastUpdated();
+  } catch (err) {
+    toast('Gagal reset: ' + err.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+/* ============================================================
+ * MISC
+ * ============================================================ */
+function updateLastUpdated() {
+  const now = new Date();
+  const hhmm = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  $('#lastUpdated').textContent = `Terakhir update: ${hhmm}`;
+}
+
+function viewImage(itemNo) {
+  const s = getState(itemNo);
+  if (!s.photoDataUrl) return;
+  $('#lightboxImg').src = s.photoDataUrl;
+  $('#lightbox').classList.add('active');
+}
+
+/* ============================================================
+ * EVENT BINDINGS
+ * ============================================================ */
+function bindEvents() {
+  // Search + filters (debounced)
+  let searchTimer;
+  $('#searchInput').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(renderTable, 150);
+  });
+  $('#filterStatus').addEventListener('change', renderTable);
+  $('#filterPhoto').addEventListener('change', renderTable);
+
+  // Table actions (delegated)
+  $('#tableBody').addEventListener('click', (e) => {
+    const editBtn = e.target.closest('[data-edit]');
+    if (editBtn) {
+      openModal(editBtn.dataset.edit);
+      return;
+    }
+    const photoImg = e.target.closest('[data-view]');
+    if (photoImg) {
+      viewImage(photoImg.dataset.view);
+      return;
+    }
+  });
+
+  // Modal
+  $('#modalClose').addEventListener('click', closeModal);
+  $('#modalCancel').addEventListener('click', closeModal);
+  $('#modalSave').addEventListener('click', saveModal);
+  $('#modalBackdrop').addEventListener('click', (e) => {
+    if (e.target === $('#modalBackdrop')) closeModal();
+  });
+  $('#modalPhotoInput').addEventListener('change', handlePhotoChange);
+
+  // Esc closes modal / lightbox
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if ($('#lightbox').classList.contains('active')) {
+        $('#lightbox').classList.remove('active');
+      } else if ($('#modalBackdrop').classList.contains('active')) {
+        closeModal();
+      }
+    }
+  });
+
+  // Lightbox
+  $('#lightbox').addEventListener('click', () => {
+    $('#lightbox').classList.remove('active');
+  });
+
+  // Export & Reset
+  $('#btnExport').addEventListener('click', exportToExcel);
+  $('#btnReset').addEventListener('click', resetAll);
+}
+
+/* ============================================================
+ * INIT
+ * ============================================================ */
+async function init() {
+  setLoading(true, 'Memuat data...');
+  try {
+    const records = await getAllStates();
+    for (const r of records) {
+      states.set(r.itemNo, r);
+    }
+    renderAll();
+    bindEvents();
+    if (records.length > 0) updateLastUpdated();
+    else $('#lastUpdated').textContent = `${ITEMS.length} item siap`;
+  } catch (err) {
+    console.error('Init error:', err);
+    toast('Gagal memuat data: ' + err.message, 'error');
+    renderAll();
+    bindEvents();
+  } finally {
+    setLoading(false);
+  }
+}
+
+init();
+</script>
+
+</body>
+</html>
