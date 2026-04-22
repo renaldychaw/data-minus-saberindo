@@ -923,6 +923,12 @@
       Reset
     </button>
 
+    <select id="photoSize" title="Ukuran foto di Excel">
+      <option value="small">Foto: Kecil</option>
+      <option value="medium" selected>Foto: Sedang</option>
+      <option value="large">Foto: Besar</option>
+    </select>
+
     <button class="btn btn-accent" id="btnExport">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
       Export Excel
@@ -1581,9 +1587,28 @@ async function saveModal() {
 /* ============================================================
  * EXCEL EXPORT (dengan embedded photos!)
  * ============================================================ */
+// Ukuran foto di Excel (dalam pixel, dimensi terpanjang)
+const PHOTO_SIZE_PRESETS = {
+  small:  { maxDim: 100, colWidth: 16 },
+  medium: { maxDim: 180, colWidth: 28 },
+  large:  { maxDim: 280, colWidth: 42 }
+};
+
+function getImageDims(dataUrl) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => resolve({ w: img.naturalWidth || 1, h: img.naturalHeight || 1 });
+    img.onerror = () => resolve({ w: 1, h: 1 });
+    img.src = dataUrl;
+  });
+}
+
 async function exportToExcel() {
   setLoading(true, 'Membuat file Excel...');
   try {
+    const preset = PHOTO_SIZE_PRESETS[$('#photoSize').value] || PHOTO_SIZE_PRESETS.medium;
+    const MAX_DIM = preset.maxDim;
+
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'PT. Saberindo Pacific';
     workbook.created = new Date();
@@ -1624,16 +1649,16 @@ async function exportToExcel() {
     });
     headerRow.height = 22;
 
-    // Column widths
+    // Column widths — kolom Foto menyesuaikan preset ukuran
     sheet.columns = [
-      { width: 5 },    // No
-      { width: 18 },   // Item No
-      { width: 60 },   // Description
-      { width: 10 },   // Qty
-      { width: 14 },   // Status
-      { width: 40 },   // Notes
-      { width: 14 },   // Foto (image column)
-      { width: 30 }    // Photo filename
+      { width: 5 },                   // No
+      { width: 18 },                  // Item No
+      { width: 60 },                  // Description
+      { width: 10 },                  // Qty
+      { width: 14 },                  // Status
+      { width: 40 },                  // Notes
+      { width: preset.colWidth },     // Foto (dynamic)
+      { width: 30 }                   // Photo filename
     ];
 
     // Data rows
@@ -1684,34 +1709,45 @@ async function exportToExcel() {
       statusCell.font = { size: 9, bold: true, color: { argb: colors.fg } };
       statusCell.alignment = { horizontal: 'center', vertical: 'middle' };
 
-      // Embed photo if exists
+      // Default row height (akan di-override kalau ada foto)
+      let finalRowHeight = 20;
+
+      // Embed photo dengan aspect ratio terjaga
       if (s.photoDataUrl) {
         try {
-          // Extract base64 part + detect extension
           const match = s.photoDataUrl.match(/^data:image\/(\w+);base64,(.+)$/);
           if (match) {
             const ext = match[1].toLowerCase();
-            const validExt = ['jpeg', 'jpg', 'png', 'gif'].includes(ext) ? (ext === 'jpg' ? 'jpeg' : ext) : 'jpeg';
+            const validExt = ['jpeg', 'jpg', 'png', 'gif'].includes(ext)
+              ? (ext === 'jpg' ? 'jpeg' : ext)
+              : 'jpeg';
+
+            // Ambil dimensi asli foto, lalu skala sesuai preset (preserve aspect ratio)
+            const dims = await getImageDims(s.photoDataUrl);
+            const scale = Math.min(MAX_DIM / dims.w, MAX_DIM / dims.h, 1);
+            const scaledW = Math.max(20, Math.round(dims.w * scale));
+            const scaledH = Math.max(20, Math.round(dims.h * scale));
+
             const imageId = workbook.addImage({
               base64: match[2],
               extension: validExt
             });
-            // Place image in column G (index 6 in 0-based)
             sheet.addImage(imageId, {
-              tl: { col: 6.05, row: rowIdx - 1 + 0.05 },
-              ext: { width: 82, height: 82 },
+              tl: { col: 6.1, row: rowIdx - 1 + 0.1 },
+              ext: { width: scaledW, height: scaledH },
               editAs: 'oneCell'
             });
-            // Set row height to fit image
-            row.height = 68;
+
+            // Row height dalam "points" Excel (1 point ≈ 1.333 px pada 96 DPI)
+            // Tambah padding 8px biar foto tidak mepet border baris
+            finalRowHeight = Math.round((scaledH + 8) / 1.333);
           }
         } catch (imgErr) {
           console.warn('Gagal embed foto untuk', item.itemNo, imgErr);
         }
-      } else {
-        row.height = 20;
       }
 
+      row.height = finalRowHeight;
       rowIdx++;
     }
 
