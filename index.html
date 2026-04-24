@@ -822,6 +822,82 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
   .loading-text { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  /* Keyboard kbd styling */
+  kbd {
+    display: inline-block;
+    padding: 1px 6px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    line-height: 1.4;
+    vertical-align: middle;
+  }
+
+  /* Selected row (for paste-to-row feature) */
+  tbody tr.selected {
+    background: #fef3c7 !important;
+    box-shadow: inset 3px 0 0 var(--accent);
+  }
+  tbody tr.selected:hover { background: #fde68a !important; }
+
+  /* Paste hint banner - shows when row is selected */
+  .paste-hint {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--ink);
+    color: #fafaf9;
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 400;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .paste-hint.active { transform: translateX(-50%) translateY(0); }
+  .paste-hint kbd {
+    background: rgba(255,255,255,0.12);
+    color: #fafaf9;
+    border-color: rgba(255,255,255,0.2);
+  }
+  .paste-hint .close-hint {
+    background: rgba(255,255,255,0.1);
+    border: none;
+    color: #d6d3d1;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    cursor: pointer;
+    pointer-events: auto;
+    margin-left: 4px;
+    transition: all 0.15s;
+  }
+  .paste-hint .close-hint:hover { background: rgba(255,255,255,0.2); color: #fafaf9; }
+
+  /* Paste-ready state on upload area */
+  .photo-upload.paste-flash {
+    animation: pasteFlash 0.5s ease;
+  }
+  @keyframes pasteFlash {
+    0% { background: var(--surface-2); }
+    40% { background: #fef3c7; border-color: var(--accent); }
+    100% { background: var(--surface-2); }
+  }
 </style>
 </head>
 <body>
@@ -956,7 +1032,7 @@
     </div>
     <div class="table-footer">
       <span id="tableFooterCount">Menampilkan 0 item</span>
-      <span class="mono" style="font-size: 11px;">Data tersimpan otomatis di browser</span>
+      <span class="mono" style="font-size: 11px;">Klik baris lalu <kbd>Ctrl</kbd><kbd>V</kbd> untuk paste screenshot</span>
     </div>
   </section>
 </main>
@@ -1023,7 +1099,7 @@
             <div class="photo-upload-placeholder">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
               <div class="main-text">Klik untuk upload foto</div>
-              <div class="sub-text">JPG, PNG, maks 10MB (auto-compress)</div>
+              <div class="sub-text">Atau tekan <kbd>Ctrl</kbd>+<kbd>V</kbd> untuk paste screenshot</div>
             </div>
           </div>
         </label>
@@ -1047,6 +1123,15 @@
   <div class="loading-text" id="loadingText">Memproses...</div>
 </div>
 
+<!-- PASTE HINT -->
+<div class="paste-hint" id="pasteHint">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+  <span>Tekan <kbd>Ctrl</kbd><kbd>V</kbd> untuk paste screenshot ke <strong id="pasteHintItem"></strong></span>
+  <button class="close-hint" id="pasteHintClose" aria-label="Batal">
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+</div>
+
 <!-- TOASTS -->
 <div class="toast-container" id="toastContainer"></div>
 
@@ -1065,128 +1150,128 @@ const ITEMS = [
   { no: 8, itemNo: "4ABM12X80", description: "ANCHOR BOLT SS304 SIZE M12 X 80MM, C/W NUT (2) + WASHER", defQty: -976 },
   { no: 9, itemNo: "2GCG3ULFMG", description: "GRINNEL COUPLING GROOVED 3\" UL/FM APPROVED FIG.577", defQty: -665 },
   { no: 10, itemNo: "5SCLCE19", description: "SADLE CLAMP CONDUIT STEEL E19 \"WAHANA\"", defQty: -500 },
-  { no: 11, itemNo: "3AVV15BSPT", description: "ANGLE VALVE 1/2\" BSPT", defQty: -376 },
-  { no: 12, itemNo: "FFNKH12C1", description: "FIRE HOSE NOZZLE 1-1/2\"", defQty: -372 },
-  { no: 13, itemNo: "5SCE19", description: "STEEL CONDUIT E19 MM X 3800 MM \"WAHANA\"", defQty: -257 },
-  { no: 14, itemNo: "8891000481", description: "BRACKET SUPPORT KABEL TRAY 100 MM", defQty: -201 },
-  { no: 15, itemNo: "8891000493", description: "SUPPORT KABEL TRAY WALL MOUNTED 300 MM", defQty: -185 },
-  { no: 16, itemNo: "B250FCT", description: "FIRE CYLINDER TRACE TAPE", defQty: -179 },
-  { no: 17, itemNo: "B200SDT", description: "SPRINKLER DROP TAG", defQty: -168 },
-  { no: 18, itemNo: "4AN12B", description: "ANCHOR NUT M12 BSP", defQty: -165 },
-  { no: 19, itemNo: "2PTUBE2X6", description: "PIPE TUBING 2\" X 6 METER SCHEDULE 40", defQty: -160 },
-  { no: 20, itemNo: "5EEC10", description: "ELBOW EMT CONDUIT 1\" / 25 MM", defQty: -150 },
-  { no: 21, itemNo: "GSMMT1210", description: "GI SMS MALE THREAD 1/2\" X 1\"", defQty: -144 },
-  { no: 22, itemNo: "PROJ-SPR-003", description: "SPRINKLER PENDENT TYVA 1/2\", K=5.6, RESPONSE: QUICK", defQty: -130 },
-  { no: 23, itemNo: "2PGLSR1214X3MJ", description: "PIPE GALVANIS SCH 40 MEDIUM 1-1/4\" X 6M BJS JIS G3452", defQty: -127 },
-  { no: 24, itemNo: "2KVCH", description: "KUPANG VALVE CHECK", defQty: -120 },
-  { no: 25, itemNo: "8891000494", description: "SUPPORT KABEL TRAY WALL MOUNTED 600 MM", defQty: -111 },
-  { no: 26, itemNo: "2TEE3X3", description: "TEE 3\" X 3\" EQUAL GROOVED ONLY", defQty: -108 },
-  { no: 27, itemNo: "2PGLSR112X6MJ", description: "PIPE GALVANIS SCH 40 MEDIUM 1-1/2\" X 6M BJS JIS G3452", defQty: -108 },
-  { no: 28, itemNo: "FHRCNEOL", description: "FIRE HOSE REEL NOZZLE", defQty: -106 },
-  { no: 29, itemNo: "2GEL1X90", description: "GROOVED ELBOW 1\" X 90 DEG", defQty: -100 },
-  { no: 30, itemNo: "4PNUT1216", description: "U-NUT 12 X 16 MM", defQty: -92 },
-  { no: 31, itemNo: "2MC1812", description: "MALLEABLE COUPLING REDUCER 3/4\" X 1/2\"", defQty: -90 },
-  { no: 32, itemNo: "8891000465", description: "JOINTING LADDER TYPE U H100", defQty: -90 },
-  { no: 33, itemNo: "PROJ-SPR-002", description: "SPRINKLER UPRIGHT TYVA 1/2\", K=5.6, RESPONSE: QUICK", defQty: -87 },
-  { no: 34, itemNo: "2GELBR3X3", description: "GROOVED ELBOW REDUCER 3\" X 2\"", defQty: -85 },
-  { no: 35, itemNo: "2CP3", description: "COUPLING PIPE 3\"", defQty: -83 },
-  { no: 36, itemNo: "2NEC3X3", description: "NIPPLE ECCENTRIC 3\" X 2\"", defQty: -75 },
-  { no: 37, itemNo: "2FLNDN80", description: "FLANGE DN 80 / 3\" SLIP ON RAISED FACE", defQty: -72 },
-  { no: 38, itemNo: "2ELG1212", description: "ELBOW GALVANIS 1/2\" X 1/2\"", defQty: -70 },
-  { no: 39, itemNo: "2GEL2X45", description: "GROOVED ELBOW 2\" X 45 DEG", defQty: -64 },
-  { no: 40, itemNo: "2CG20ELC", description: "CONCENTRIC ELBOW GALV 20MM", defQty: -60 },
-  { no: 41, itemNo: "5GKLO38", description: "GLAND KABEL LOCKNUT 3/8\"", defQty: -60 },
-  { no: 42, itemNo: "4BP10125", description: "BAUT PAN HEAD M10 X 125 MM", defQty: -58 },
-  { no: 43, itemNo: "4BP10100", description: "BAUT PAN HEAD M10 X 100 MM", defQty: -56 },
-  { no: 44, itemNo: "5CJBUXO", description: "CABLE JACKET BOX UNIV. OUT", defQty: -54 },
-  { no: 45, itemNo: "8891000443", description: "COVER KABEL TRAY PERFORATED TYPE U - SIZE: W300XL3000MM", defQty: -52 },
-  { no: 46, itemNo: "2GCG2ULFMG", description: "GRINNEL COUPLING GROOVED 2\" UL/FM APPROVED FIG.577", defQty: -50 },
-  { no: 47, itemNo: "2NIPP3X5C", description: "NIPPLE 3\" X 5 CM", defQty: -48 },
-  { no: 48, itemNo: "8891000491", description: "SUPPORT KABEL TRAY WALL MOUNTED 100 MM", defQty: -46 },
-  { no: 49, itemNo: "4BH8X50", description: "BAUT HEXA M8 X 50 MM", defQty: -45 },
-  { no: 50, itemNo: "FFHCXX25", description: "FIRE HOSE CANVAS 2.5\" X 30M", defQty: -44 },
-  { no: 51, itemNo: "PROJ-FM200-010", description: "FM200 CONTAINER 67.5 LITER C/W VALVE & FITTING", defQty: -42 },
-  { no: 52, itemNo: "5CTPVCWHT", description: "CABLE TIE PVC WHITE", defQty: -40 },
-  { no: 53, itemNo: "2GEL3X45", description: "GROOVED ELBOW 3\" X 45 DEG", defQty: -40 },
-  { no: 54, itemNo: "5LAMPLED", description: "LAMPU LED 5W PUTIH", defQty: -38 },
-  { no: 55, itemNo: "2CP2", description: "COUPLING PIPE 2\"", defQty: -36 },
-  { no: 56, itemNo: "2NEC2X1", description: "NIPPLE ECCENTRIC 2\" X 1\"", defQty: -35 },
-  { no: 57, itemNo: "4SPG20", description: "SPRING GROOVED 20 CM", defQty: -32 },
-  { no: 58, itemNo: "FFHCXX15", description: "FIRE HOSE CANVAS 1.5\" X 30M", defQty: -30 },
-  { no: 59, itemNo: "2PTEE1X1", description: "PIPE TEE 1\" X 1\" EQUAL", defQty: -28 },
-  { no: 60, itemNo: "3GV15WHL", description: "GLOBE VALVE 1/2\" WHEEL", defQty: -27 },
-  { no: 61, itemNo: "5PVCTBE25", description: "PVC TUBE E25 X 2.9 METER", defQty: -26 },
-  { no: 62, itemNo: "2BCKVL3", description: "BUTTERFLY CHECK VALVE 3\"", defQty: -25 },
-  { no: 63, itemNo: "FFDCR1X", description: "FIRE DEPARTMENT CONNECTION 1-WAY", defQty: -24 },
-  { no: 64, itemNo: "PROJ-PUMP-003", description: "ELECTRIC JOCKEY PUMP 3KW 3PH 50HZ, HEAD: 90M, CAP: 25LPM", defQty: -22 },
-  { no: 65, itemNo: "2PGEBR15X14", description: "PIPE GALVANIS ELBOW REDUCER 1.5\" X 1.25\"", defQty: -20 },
-  { no: 66, itemNo: "5KNYA25HKMIM", description: "KABEL NYA 2.5 MM WARNA HITAM IN METER KABELMETAL INDONESIA", defQty: -20 },
-  { no: 67, itemNo: "4SLBRKT75", description: "SLOT BRACKET 75 MM STAINLESS STEEL", defQty: -18 },
-  { no: 68, itemNo: "2PGLSR2X6MJ", description: "PIPE GALVANIS SCH 40 MEDIUM 2\" X 6M BJS JIS G3452", defQty: -18 },
-  { no: 69, itemNo: "4HGRCLP50", description: "HEX GEAR CLAMP 50 MM", defQty: -16 },
-  { no: 70, itemNo: "B300LBLFP", description: "LABEL FIRE PUMP STAINLESS STEEL 300 MM", defQty: -15 },
-  { no: 71, itemNo: "2NEC4X3", description: "NIPPLE ECCENTRIC 4\" X 3\"", defQty: -14 },
-  { no: 72, itemNo: "5CBL25MM2BK", description: "CABLE NYY 2.5 SQMM 3 CORE BLACK \"SUPREME\"", defQty: -12 },
-  { no: 73, itemNo: "FCPCNL2WAY", description: "FIRE CONTROL PANEL CONVENTIONAL 2 ZONE", defQty: -10 },
-  { no: 74, itemNo: "2GEL4X90", description: "GROOVED ELBOW 4\" X 90 DEG", defQty: -10 },
-  { no: 75, itemNo: "PROJ-VLV-008", description: "OS&Y GATE VALVE 4\" UL/FM", defQty: -10 },
-  { no: 76, itemNo: "5PBBOX4X4", description: "PULL BOX 4\" X 4\" X 2.5\" GALVANIZED", defQty: -9 },
-  { no: 77, itemNo: "4BL10X80SS", description: "BAUT L M10 X 80 SS304", defQty: -9 },
-  { no: 78, itemNo: "2FCC3GROOVE", description: "FLEX COUPLING 3\" GROOVED", defQty: -8 },
-  { no: 79, itemNo: "5SPLC4X4MMS", description: "SPLITTER 4 X 4 MM SOCKET MILD STEEL", defQty: -8 },
-  { no: 80, itemNo: "PROJ-DS-001", description: "DETECTOR SMOKE OPTICAL, 24V, KIDDE", defQty: -8 },
-  { no: 81, itemNo: "FFSWC1X", description: "FLOW SWITCH 1\" W/O RETARD", defQty: -7 },
-  { no: 82, itemNo: "FFSIREN", description: "FIRE SIREN OUTDOOR 24V DC RED", defQty: -7 },
-  { no: 83, itemNo: "B150VALTAG", description: "VALVE TAG ALUMINIUM 150 MM", defQty: -7 },
-  { no: 84, itemNo: "5CBL4MM4CB", description: "CABLE NYY 4 SQMM 4 CORE \"SUPREME\"", defQty: -6 },
-  { no: 85, itemNo: "4STUD20MM", description: "STUD BOLT M20 X 100 MM", defQty: -6 },
-  { no: 86, itemNo: "2PGT3X125", description: "PIPE GALVANIS TEE 3\" X 1.25\"", defQty: -6 },
-  { no: 87, itemNo: "PROJ-CALL-002", description: "MANUAL CALL POINT, 24V, ADDRESSABLE", defQty: -6 },
-  { no: 88, itemNo: "5CLAMPOU75", description: "CABLE CLAMP OUTDOOR 75 MM", defQty: -6 },
-  { no: 89, itemNo: "FCPCNL4WAY", description: "FIRE CONTROL PANEL CONVENTIONAL 4 ZONE", defQty: -5 },
-  { no: 90, itemNo: "2PGCAP3", description: "PIPE GALVANIS CAP 3\"", defQty: -5 },
-  { no: 91, itemNo: "FFVOCXX25", description: "FIRE VALVE OUTLET COUPLING 2.5\"", defQty: -5 },
-  { no: 92, itemNo: "2BKBFV4UL", description: "BUTTERFLY VALVE 4\" UL/FM", defQty: -5 },
-  { no: 93, itemNo: "2NEC6X4", description: "NIPPLE ECCENTRIC 6\" X 4\"", defQty: -4 },
-  { no: 94, itemNo: "5PKPVC1X1", description: "PVC JUNCTION BOX 1\" X 1\"", defQty: -4 },
-  { no: 95, itemNo: "PROJ-HEAT-001", description: "HEAT DETECTOR ROR TYPE, 24V", defQty: -4 },
-  { no: 96, itemNo: "B450SIGNSR", description: "SIGN SIAMESE CONNECTION STAINLESS 450 MM", defQty: -4 },
-  { no: 97, itemNo: "PROJ-STR-005", description: "STROBE LIGHT RED 24V DC, FLASH", defQty: -4 },
-  { no: 98, itemNo: "PROJ-HORN-003", description: "HORN STROBE WHITE/RED 24V DC", defQty: -4 },
-  { no: 99, itemNo: "FFSWC2", description: "FLOW SWITCH 2\" W/RETARD", defQty: -3 },
-  { no: 100, itemNo: "FFSWC3X", description: "FLOW SWITCH 3\" W/RETARD", defQty: -3 },
-  { no: 101, itemNo: "2VLAL150", description: "ALARM VALVE 150 MM DRY", defQty: -3 },
-  { no: 102, itemNo: "PROJ-PS-001", description: "PRESSURE SWITCH, 0-20 BAR, SPDT", defQty: -3 },
-  { no: 103, itemNo: "5KVASSR10A", description: "KABEL VSR SOLID STATE RELAY 10A 240V", defQty: -3 },
-  { no: 104, itemNo: "4GASK4", description: "GASKET GROOVED 4\" SET", defQty: -3 },
-  { no: 105, itemNo: "PROJ-BZR-001", description: "BUZZER 24V DC RED, 92 DB", defQty: -3 },
-  { no: 106, itemNo: "FFPGAUG0300", description: "PRESSURE GAUGE 0-300 PSI 1/4\" BOTTOM CONNECTION", defQty: -3 },
-  { no: 107, itemNo: "5LAMPFLUOR", description: "LAMPU FLUORESCENT TL 20W, 220V", defQty: -2 },
-  { no: 108, itemNo: "4CLMRANK50", description: "CLAMP RANKING 50 MM TYPE M", defQty: -2 },
-  { no: 109, itemNo: "2PGU1", description: "PIPE GALVANIS UNION 1\"", defQty: -2 },
-  { no: 110, itemNo: "2CPVC112", description: "COUPLING PVC 1.5\"", defQty: -2 },
-  { no: 111, itemNo: "5CBL4MM3CB", description: "CABLE NYY 4 SQMM 3 CORE \"SUPREME\"", defQty: -2 },
-  { no: 112, itemNo: "PROJ-HOSEREL", description: "FIRE HOSE REEL W/CABINET, 30M HOSE", defQty: -2 },
-  { no: 113, itemNo: "PROJ-INDI-003", description: "INDICATOR POST, UL/FM APPROVED", defQty: -2 },
-  { no: 114, itemNo: "4CLMHVY100", description: "CLAMP HEAVY DUTY 100 MM", defQty: -2 },
-  { no: 115, itemNo: "2PGPLG2", description: "PIPE GALVANIS PLUG 2\"", defQty: -2 },
-  { no: 116, itemNo: "PROJ-VLV-012", description: "BALL VALVE 2\" FEMALE BSP BRASS", defQty: -2 },
-  { no: 117, itemNo: "4BTMALHX12", description: "BAUT MACHINE HEX M12 X 50 MM", defQty: -2 },
-  { no: 118, itemNo: "PROJ-TEE-006", description: "TEE REDUCER GROOVED 4\" X 3\" X 4\"", defQty: -2 },
-  { no: 119, itemNo: "FFCAB03", description: "FIRE CABINET OUTDOOR, 800X600X250MM, W/GLASS", defQty: -2 },
-  { no: 120, itemNo: "PROJ-VLV-015", description: "CHECK VALVE SWING 6\" UL/FM, FLANGED", defQty: -1 },
-  { no: 121, itemNo: "2PGEL6X90", description: "PIPE GALVANIS ELBOW 6\" X 90 DEG", defQty: -1 },
-  { no: 122, itemNo: "2PGTEE6X4", description: "PIPE GALVANIS TEE 6\" X 4\"", defQty: -1 },
-  { no: 123, itemNo: "PROJ-FP-001", description: "FIRE PUMP DIESEL DRIVEN, 500GPM, HEAD: 80M, UL/FM", defQty: -1 },
-  { no: 124, itemNo: "PROJ-FP-002", description: "FIRE PUMP ELECTRIC DRIVEN, 500GPM, HEAD: 80M, UL/FM", defQty: -1 },
-  { no: 125, itemNo: "PROJ-TANK-001", description: "WATER STORAGE TANK FIBERGLASS, 20 M3", defQty: -1 },
-  { no: 126, itemNo: "5CBL25MM4CB", description: "CABLE NYY 2.5 SQMM 4 CORE \"SUPREME\"", defQty: -1 },
-  { no: 127, itemNo: "PROJ-PAN-004", description: "PANEL FIRE ALARM MAIN CONTROL 10 ZONE, NITTAN", defQty: -1 },
-  { no: 128, itemNo: "PROJ-BATT-002", description: "BATTERY 12V 7AH SEALED LEAD ACID, PANASONIC", defQty: -1 },
-  { no: 129, itemNo: "PROJ-FM200-011", description: "FM200 NOZZLE 1\", 180 DEG DISCHARGE", defQty: -1 },
-  { no: 130, itemNo: "PROJ-FM200-012", description: "FM200 MANIFOLD 2\" DN50 X 3 OUTLET", defQty: -1 },
-  { no: 131, itemNo: "PROJ-CO2-003", description: "CO2 CYLINDER 45KG, SEAMLESS STEEL, 150 BAR WP", defQty: -1 },
-  { no: 132, itemNo: "PROJ-EXT-010", description: "FIRE EXTINGUISHER CO2 6.8 KG, STAINLESS STEEL", defQty: -1 },
+  { no: 11, itemNo: "8896870012", description: "CABLE INSTRUMENT & DATA ARMOURED, TIPE : FLAME RETARDANT AS PER IEC 60332-3-24, 1 PAIR X 16 AWG, BRAND: FIRST CABLE", defQty: -400 },
+  { no: 12, itemNo: "CUXLPESWAPVC-FL3C6M", description: "JEMBO POWER CABLE (LV) - 0,6/1 KV TYPE CU/XLPE/SWA/PVC-FL (CAT A) 1 - 3C X 6MM2", defQty: -369 },
+  { no: 13, itemNo: "8891000439", description: "KABEL TRAY PERFORATED TYPE U - TEBAL BAHAN 2 MM, SIZE : W100 X D100 X L3000 MM C/W COVER AND ACCESORIES", defQty: -356 },
+  { no: 14, itemNo: "8891000524", description: "CABLE POWER ARMOURED 1-3C #2.5 MM2, BRAND: JEMBO", defQty: -350 },
+  { no: 15, itemNo: "2017010013", description: "BESI PLAT MILD STEEL, THICKNESS: 5 MM. SIZE : 200 MM X 200 MM)", defQty: -218 },
+  { no: 16, itemNo: "17CT300X100", description: "CABLE TRAY, DIM. 300MM (W) X 100MM (H) X 3000MM (L), GALVANIS", defQty: -200 },
+  { no: 17, itemNo: "5CIB2HDG", description: "INSULATED BUSHING 2\", HOT DIP GALVANIZED", defQty: -192 },
+  { no: 18, itemNo: "2017450024", description: "LOKAL MATA BOR STAINLESS \"NACHI JAPAN\" 12mm", defQty: -180 },
+  { no: 19, itemNo: "2017450093", description: "STUD BOLT 5/8\" (M16) LENGTH 90 MM C/W NUT (2) & WASHER (2), GALVANIZED", defQty: -178 },
+  { no: 20, itemNo: "2WTECS30002", description: "EQUAL TEE 2\", ASTM A105, #3000, NPT THREADED", defQty: -155 },
+  { no: 21, itemNo: "16CTS100X100", description: "COVER TRAY (STRAIGHT) 100X100X3000 MM, GALVANIZED.", defQty: -150 },
+  { no: 22, itemNo: "2TBSGCS3000NPT2X1", description: "BUSHING 2\" X 1\" #3000 NPT, CARBON STEEL", defQty: -120 },
+  { no: 23, itemNo: "2WRCCSNPT30001X12", description: "REDUCER COUPLING 1\" X 1/2\", CS A105 NPT #3000", defQty: -107 },
+  { no: 24, itemNo: "9891000081", description: "ASENWARE 88 DEGREES LINIER HEAT DETECTOR CONVENTIONAL TYPE, MODE NO : AW-D4088, IN METER", defQty: -106 },
+  { no: 25, itemNo: "8891000357", description: "WAHANA CABLE GLAND METAL CONDUIT E-19 (FLEX KE BOX)", defQty: -100 },
+  { no: 26, itemNo: "2017330024", description: "CONNECTOR FLEXIBLE TO EMT PIPE, SIZE : E19", defQty: -100 },
+  { no: 27, itemNo: "8891000464", description: "COVER CLAMP LADDER W300XH100 MM C/W MUR BAUT RING", defQty: -90 },
+  { no: 28, itemNo: "17JCT50B", description: "BAUT + MUR, UKURAN 12 UNTUK JOINT TRAY, UKURAN: 50 X 1.2 MM STEEL", defQty: -80 },
+  { no: 29, itemNo: "2017460022", description: "ELBOW 90 DEG 2\" , A105N, #3000 NPT", defQty: -64 },
+  { no: 30, itemNo: "17CT100X100C", description: "CABLE TRAY (STRAIGHT) DIA100MM X 100MM X 3000MM TYPE C BERLUBANG, GALVANIZED.", defQty: -63 },
+  { no: 31, itemNo: "2005250015", description: "SABRE FIRE EXTINGUISHER ABC DRY CHEMICAL POWDER 3 KG", defQty: -63 },
+  { no: 32, itemNo: "8891000459", description: "IR LADDER W300XH100 MM R.300", defQty: -55 },
+  { no: 33, itemNo: "8893000031", description: "CABLE GLAND M20 BRASS NI-PLATED 14-20.5MM, OS-E1UF-20, C/W LOCK NUT, SEALING WASHER AND SHROUD, BRAND OSGC", defQty: -54 },
+  { no: 34, itemNo: "2TTEST3000NPT1", description: "TEE EQUAL 1\" 3000# CS, NPT THREAD, ASTM A 105", defQty: -50 },
+  { no: 35, itemNo: "BNA193A194U5/8X85", description: "BOLTS AND NUTS A193-B7 A194-2H STUD W/2HVY-HEX-NUTS UNIF ANSI B1.1 U5/8 X 85", defQty: -40 },
+  { no: 36, itemNo: "4UB412TNW", description: "U-BOLT 4\" SIZE ROD 1/2\" GALVANZED", defQty: -40 },
+  { no: 37, itemNo: "PROJ-NAMETAG-009", description: "NAME TAG UKURAN 3,5 X 20 CM, MATERIAL : ACRILYC PUTIH, TEBAL 2 MM, DOUBLE TAPE 3M", defQty: -38 },
+  { no: 38, itemNo: "2522000039", description: "POTTER HEAT DETECTOR, 135 DEG, VERTICAL MT, HEX-BUSHING, EXPLOSION-PROOF, ITEM: 1430481, MODEL: 302EPM-135", defQty: -37 },
+  { no: 39, itemNo: "CUPVCNYA1C16MM", description: "JEMBO INSTRUMENT GROUNDING/EARTHING CABLE TYPE NYA 1C X 16MM2 - RM (YL/GR) - 450/750 V", defQty: -35 },
+  { no: 40, itemNo: "4SWG32ANSI150RF2", description: "GASKET SPIRAL WOUND HOOP SS304, FLEXIBLE GRAPHITE FILLER, OUTER RING CARBON STEEL, SIZE: 2\" 150#, THICKNESS 3 MM, RF", defQty: -33 },
+  { no: 41, itemNo: "8891000465", description: "COVER TEE TRAY W100 MM R.600", defQty: -33 },
+  { no: 42, itemNo: "4SB34X90CS", description: "STUDBOLT 3/4\" C/W WASHER (2) & NUT (2), UNC (M20) X 90 MM, CARBON STEEL", defQty: -32 },
+  { no: 43, itemNo: "4UNP10", description: "BESI UNP 100 X 50 X 8 X 6000MM/LENGTH FULL SNI", defQty: -30 },
+  { no: 44, itemNo: "2017000801", description: "STUD BOLT 7/8\" , LENGTH 120MM C/W NUT (2) & WASHER (2), GALVANIS", defQty: -30 },
+  { no: 45, itemNo: "8891000447", description: "RADIUS ELBOW 90° TRAY W100XH100 MM R.300", defQty: -30 },
+  { no: 46, itemNo: "8891000457", description: "OR LADDER W300XH100 MM R.300", defQty: -30 },
+  { no: 47, itemNo: "2TUNI3000SW1", description: "UNION DIA.1\" CLASS 3000 THREADED NPT", defQty: -27 },
+  { no: 48, itemNo: "2WTECS30001", description: "Equal Tee, 1\", ASTM A105, #3000 NPT Threaded", defQty: -26 },
+  { no: 49, itemNo: "4CGS500X762", description: "COMPRESSIBLE GASKET SHEET (NON-ASBESTOS) ID DIA. 500 X OD DIA. 762, THICKNESS 1,5 MM", defQty: -25 },
+  { no: 50, itemNo: "1PSPDGBSCH403", description: "PIPE WELDED, ASTM A53 GRADE B, SCH. 40, SIZE: 3\",  @6 METER, SPINDO", defQty: -23 },
+  { no: 51, itemNo: "2TUNI3000SW2", description: "UNION DIA. 2\" CLASS 3000 THREADED NPT", defQty: -22 },
+  { no: 52, itemNo: "2017450092", description: "PRESSURE GAUGE 0-300 PSI(0-20 BAR),SIZE 4\"(100 MM), P/N.111.10SP,CERTIFICATION & TESTING FM/UL, BOURDON TUBE PRESSURE GAUGE, MAT CONNECTION: COPPER ALLOY,CONNECTION 1/4\" NPT LOWER MOUNT (LM), CASE BLACK POLYCARBONATE, POINTER BLACK ALUMINUM", defQty: -21 },
+  { no: 53, itemNo: "1PSPDGBSCH40212", description: "PIPE WELDED, ASTM A53 GRADE B, SCH. 40, SIZE:2-1/2\",  @6 METER, SPINDO", defQty: -20 },
+  { no: 54, itemNo: "8891000074", description: "LOKAL CHANEL UNP 100 X 50 X 5MM @6M LENGTH", defQty: -19 },
+  { no: 55, itemNo: "4CGS500X1000", description: "COMPRESSIBLE GASKET SHEET (NON-ASBESTOS) ID DIA. 500 X OD DIA. 1000, THICKNESS 1,5 MM", defQty: -18 },
+  { no: 56, itemNo: "4RGANSI1505MM10RF", description: "RUBBER GASKET DIA.10\" ANSI 150 RF, THICKNESS 5MM", defQty: -17 },
+  { no: 57, itemNo: "8891000449", description: "TEE TRAY W100XH100 MM R.600", defQty: -17 },
+  { no: 58, itemNo: "2008010016", description: "SABRE FIRE HOSE CANVAS 1.5\" X 30M, 13 BAR, MACHINO COUPLING", defQty: -17 },
+  { no: 59, itemNo: "2017460023", description: "ELBOW 90 DEG 1.5\" , A105N, #3000 NPT", defQty: -16 },
+  { no: 60, itemNo: "2WBFLANSI150FF2", description: "BLIND FLANGE 2\" ANSI#150 FF, CS, A105", defQty: -16 },
+  { no: 61, itemNo: "2011060004", description: "LOKAL HYDRANT VALVE BRASS 2.5\" MACHINO COUPLING C/W LOGO Q-FIRE", defQty: -15 },
+  { no: 62, itemNo: "2WRSSCH40CS3X212", description: "REDUCER SOCK 3 X 2-1/2\" CS  SCH.40 BW A234 WPB", defQty: -14 },
+  { no: 63, itemNo: "1PSPDGBSCH404", description: "PIPE WELDED, ASTM A53 GRADE B, SCH. 40, SIZE:4\",  @6 METER, SPINDO", defQty: -14 },
+  { no: 64, itemNo: "2WECS3000NPT2", description: "END CAP 2\", ASTM A105, #3000 NPT THREADED", defQty: -13 },
+  { no: 65, itemNo: "2017000290", description: "LOKAL FLANGE 4\" ANSI #150 RF S.O. BW, CS A105", defQty: -12 },
+  { no: 66, itemNo: "8891000455", description: "TEE LADDER W300XH100 MM R.600", defQty: -12 },
+  { no: 67, itemNo: "EH00000065", description: "ATG LEVEL RADAR NMR81, MODEL NO. NMR81BE2BA1B1X0A CEADB1AHJITC+AAJAPAR1R3 Z1 BRAND: ENDRESS+HAUSER", defQty: -12 },
+  { no: 68, itemNo: "2WRSSCH40CS212X2", description: "REDUCER SOCK 2-1/2 X 2\" CS  SCH.40 BW A234 WPB", defQty: -11 },
+  { no: 69, itemNo: "5IGSWSS3046", description: "INSULATION GASKET SPIRAL WOUND, THK 3 MM, #150, FLEX GRAPHITE, SS304, RF 6\"", defQty: -11 },
+  { no: 70, itemNo: "EH00000066", description: "PROTHERMO NMT81, MODEL NO. NMT81B2TAAMHFA1 ABA1A1KC05A AADJ10+JAPA R4Z1, BRAND  ENDRESS+HAUSER", defQty: -11 },
+  { no: 71, itemNo: "2WFL150ARF2", description: "FLANGE 2\" ANSI# 150 RF S.O. BW, CS A105", defQty: -10 },
+  { no: 72, itemNo: "2WRSSCH40CS4X3S", description: "REDUCER 4\"X3\" CS SCH.40 SEAMLESS", defQty: -10 },
+  { no: 73, itemNo: "8891000530", description: "AMSOIL COMPRESSOR OIL SYNTETIC SAE 30, ISO 100 @946 ML", defQty: -10 },
+  { no: 74, itemNo: "2WRCCSNPT3000112X12", description: "REDUCER COUPLING 1 1/2\" X 1/2\", CS A105 NPT #3000", defQty: -10 },
+  { no: 75, itemNo: "2WFL150ARFSO212", description: "FLANGE 2-1/2\" ANSI# 150 RF S.O. CS, A105", defQty: -9 },
+  { no: 76, itemNo: "2024380074", description: "TBFA MAT: MILD STEEL, THICKNESS: 1.2, POWDER COATING WARNA MERAH (INCLUDE PERAKITAN MODULE).", defQty: -9 },
+  { no: 77, itemNo: "4TH7", description: "JOTUN THINNER NO.7 @5 LTR/ CAN", defQty: -7 },
+  { no: 78, itemNo: "4CGS112X2X112", description: "COMPRESSIBLE GASKET SHEET ( NON-ASBESTOS) ID.Ø500 x OD. Ø660, 1,5MM THICKNESS, 1,5 M X 2 M", defQty: -7 },
+  { no: 79, itemNo: "2WFL150AFFS03", description: "FLANGE 3\" ANSI#150 RF S.O. CS, A105", defQty: -6 },
+  { no: 80, itemNo: "4SWG32ANSI150RF6", description: "GASKET SPIRAL WOUND HOOP SS304, FLEXIBLE GRAPHITE FILLER, OUTER RING CARBON STEEL, SIZE: 6\" 150#, THICKNESS 3 MM, RF", defQty: -6 },
+  { no: 81, itemNo: "2WTECS3000112", description: "EQUAL TEE 1-1/2\", CS #3000 NPT", defQty: -6 },
+  { no: 82, itemNo: "EH00000025", description: "TANKVISION TANK SCANNER NXA820, P/N : NXA820-A421D1A110A", defQty: -6 },
+  { no: 83, itemNo: "2TBSGC3000NPT112X12", description: "BUSHING 1-1/2\" X 1/2\" CS #3000 NPT, ASTM A105", defQty: -6 },
+  { no: 84, itemNo: "4SWG32ANSI150RF3", description: "GASKET SPIRAL WOUND HOOP SS304, FLEXIBLE GRAPHITE FILLER, OUTER RING CARBON STEEL, SIZE: 3\" 150#, THICKNESS 3 MM, RF", defQty: -5 },
+  { no: 85, itemNo: "1PSMCSSCH80112", description: "PIPE SEAMLESS 1-1/2\" SCH.80 ASTM A106 CARBON STEEL", defQty: -5 },
+  { no: 86, itemNo: "2TELST150BSPT1", description: "ELBOW 90 DEG SIZE: 1\" #150 THREADED BSPT, GALVANIZED", defQty: -5 },
+  { no: 87, itemNo: "0409070032", description: "AWG ADAPTER 4\" STORZ TO 4\" BSP FEMALE THREAD P/N.30174531", defQty: -4 },
+  { no: 88, itemNo: "2017000566", description: "LOKAL SPAREPARTS EQUAL TEE 3\", SCH 40 BW SEAMLESS", defQty: -4 },
+  { no: 89, itemNo: "2017000371", description: "LOKAL SPAREPARTS EQUAL TEE 4\", SCH 40 SEAMLESS", defQty: -4 },
+  { no: 90, itemNo: "2WFL150AFF4", description: "FLANGE 4\" ANSI #150 FF SLIP ON, CARBON STEEL", defQty: -4 },
+  { no: 91, itemNo: "2017460062", description: "CONCENTRIC REDUCER DIA. 6\" x 4\" ASTM A234 WPB-S BW, SCH. 40, BRAND : FKK", defQty: -4 },
+  { no: 92, itemNo: "2WRCCSNPT30002X1", description: "REDUCER COUPLING 2\" X 1\" CS A105 NPT #3000", defQty: -4 },
+  { no: 93, itemNo: "2017010065", description: "RUBBER GASKET SERAT BENANG DIA 6\", THICKNESS 5 MM, 2 PLY", defQty: -4 },
+  { no: 94, itemNo: "3TBBV1", description: "BRASS BALL VALVE THREADED, SIZE: 1\" TYPE 400 FIG T \"KITZ\"", defQty: -3 },
+  { no: 95, itemNo: "2WTECS300012", description: "EQUAL TEE 1/2\" CS #3000 NPT", defQty: -3 },
+  { no: 96, itemNo: "EH00000027", description: "SURGE ARRESTER HAW562, P/N : HAW562-AAD", defQty: -3 },
+  { no: 97, itemNo: "EH00000033", description: "REMOTE DISPLAY DKX001, ITEM NAME ORDER CODE: DKX001-BEFC1B+RA, BRAND: ENDRESS HAUSER", defQty: -3 },
+  { no: 98, itemNo: "2WELSCH40CS4LR", description: "ELBOW 90 DEG SIZE: 4\" CS SCH 40 BW A234 WPB LONG RADIUS", defQty: -3 },
+  { no: 99, itemNo: "1PSPDGBSCH406", description: "PIPE WELDED, ASTM A53 GRADE B, SCH. 40, SIZE: 6\",  @6 METER, SPINDO", defQty: -3 },
+  { no: 100, itemNo: "4UNP532", description: "BESI UNP 50 X 32 X 5MM, PANJANG 6 METER \"FULL SNI\"", defQty: -3 },
+  { no: 101, itemNo: "2017010075", description: "LOKAL HOSE NOZZLE 1.5\" MACHINO (BRASS) + VARIABLE HEAD NOZZLE 1.5\" (ROSE GOLD COLOR)", defQty: -3 },
+  { no: 102, itemNo: "2708010078", description: "Q-FIRE HOSE RUBBER 1.5\" X 30 MTR C/W STORZ  COUPLING", defQty: -2 },
+  { no: 103, itemNo: "5KSI1,5B", description: "KABEL SCUN TYPE (I); 1.5 MM BIRU / PAK @100 PCS", defQty: -2 },
+  { no: 104, itemNo: "2017460024", description: "ELBOW 90 DEG 1\" , A105N, #3000 NPT", defQty: -2 },
+  { no: 105, itemNo: "PROJ-AS-002", description: "PLAT ALUMUNIUM 200 MM X 200 MM X 150 MM", defQty: -2 },
+  { no: 106, itemNo: "2WBFLANSI150FF8", description: "BLIND FLANGE 8\" ANSI#150 FF, CS, A105", defQty: -2 },
+  { no: 107, itemNo: "5KSO15H", description: "SKUN KABEL SIZE 1.5 MM2 TYPE 0 CW VINIL HITAM @100PCS/PACK", defQty: -2 },
+  { no: 108, itemNo: "3208020030", description: "Q-FIRE EPDM FIRE HOSE 1,5” X 30 M C/W MACHINO ALUMUNIUM BRASS “COLOUR”", defQty: -2 },
+  { no: 109, itemNo: "2522000034", description: "POTTER ADDRESSABLE PAD300 SERIES DETECTORS PAD 300 PHOTO DETECTOR (UL 7TH EDITION) ITEM 3992775 MODEL PAD300-PD", defQty: -2 },
+  { no: 110, itemNo: "7703070014", description: "POK ADAPTER SIZE: 6\" BSP FEMALE TO STORZ 6\" ALUMINUM", defQty: -2 },
+  { no: 111, itemNo: "1PSMCSSCH4012G", description: "PIPE SEAMLESS CARBON STEEL ASTM A106 SCH 40 SIZE: 1/2\" HOT DEEP GALVANIS", defQty: -2 },
+  { no: 112, itemNo: "2017460073", description: "REDUCER CONCENTRIC 6\" X 3\" SCH 40 ANSI B16.9 TYPE SEAMLESS", defQty: -2 },
+  { no: 113, itemNo: "9891000076", description: "ASENWARE LINEAR DETECTOR INTERFACE MODEL NO. AW-D401", defQty: -2 },
+  { no: 114, itemNo: "2517000083", description: "HD FIRE DELUGE VALVE MODEL H3, DUCTILE IRON, GLOBE TYPE, VERTICAL MOUNTING, 17.5 KG/CM2, ANSI FLANGED CLASS 150 FF, UL LISTED (CATALOG HD235); DN200", defQty: -2 },
+  { no: 115, itemNo: "PROJ-MS-0005", description: "PLAT BESI UKURAN 1200 X 2400 MM, TEBAL 2MM", defQty: -2 },
+  { no: 116, itemNo: "2WRCSCH404X2", description: "CONCENTRIC REDUCER, DN100 (4\") X DN50 (2\"), ASTM A234/A234M, WPB, FS, BE, SCH 40", defQty: -2 },
+  { no: 117, itemNo: "FFS2720007", description: "FFS 12\" STORZ 4 LUG TO DN300 PN16 W/RAISED FLANGE FACE, MATERIAL: ALUMUNIUM", defQty: -2 },
+  { no: 118, itemNo: "2FL150RFBW10", description: "FLANGE 10\" ANSI# 150 RF BW, CS, A105", defQty: -1 },
+  { no: 119, itemNo: "1PSMSCH406", description: "PIPA SEAMLESS 6\" SCH.40 API 5L ASTM A106 @ 6 MTR", defQty: -1 },
+  { no: 120, itemNo: "9191820009", description: "FIRETRACE 50 FT FIRETRACE DETECTION TUBING 6MM (FDT) P/N.204050", defQty: -1 },
+  { no: 121, itemNo: "1PSMCSSCH402G", description: "PIPE 2\" SEAMLESS SCH.40 ASTM A53 HOT DIP GALVANIZED", defQty: -1 },
+  { no: 122, itemNo: "1PSMCSSCH404G", description: "PIPE 4\" SEAMLESS SCH.40 ASTM A53 HOT DIP GALVANIZED", defQty: -1 },
+  { no: 123, itemNo: "2017001032", description: "BOSCH BATTERY SHORT CODE: AGM L3, SUBNAME: AGM, 20AH70, SIZE: LENGTH 277MM, WIDTH: 175MM, HEIGHT: 190 MM", defQty: -1 },
+  { no: 124, itemNo: "2TRTST3000NPT114X34", description: "TEE REDUCER 1.1/4\" X 3/4\" A105N #3000 NPT", defQty: -1 },
+  { no: 125, itemNo: "159.30631.0 (V75S)", description: "TOHATSU SPAREPARTS DIAPHRAGMA", defQty: -1 },
+  { no: 126, itemNo: "9701.0.1004(VC75DS)", description: "TOHATSU SPAREPARTS SPARK PLUG (B7HS)", defQty: -1 },
+  { no: 127, itemNo: "2017001225", description: "INDUSTRIAL GRADE SILENCER", defQty: -1 },
+  { no: 128, itemNo: "8891000525", description: "WIRE MARKER PVC TUBE MARKER, FOR WIRE 1.5 TO 2.5SQMM @ 200M/ROLL", defQty: -1 },
+  { no: 129, itemNo: "2017001316", description: "LOCTITE 545 THREAD SEALANT 50 ML", defQty: -1 },
+  { no: 130, itemNo: "3617000107", description: "JOHSTADT SKID FIRE PUMP VF2000D", defQty: -1 },
+  { no: 131, itemNo: "EH-EQ-LOT", description: "INSTRUMENTS AND SYSTEM COMPONENTS", defQty: -1 },
+  { no: 132, itemNo: "PROJ-KAMERA-0001", description: "KAMERA RICOH PENTAX WG-90 WATERPROOF", defQty: -1 },
   { no: 133, itemNo: "PROJ-NAMETAG-001", description: "NAME TAG BAHAN ACRYLIC, SIZE : 200 MM X 70 MM", defQty: -1 },
   { no: 134, itemNo: "388249", description: "TORNATECH ELECTRIC FIRE PUMP CONTROL PANEL, MODEL: GFY-380/220/2/50, POWER: 220HP 380V 3 PHASE 50HZ, SERIAL: B 104470, CONTROL PANEL UNIT I/O", defQty: -1 },
   { no: 135, itemNo: "8891000469", description: "HUB SWITCH 220 VAC 8 PORT, CISCO", defQty: -1 },
@@ -1267,6 +1352,7 @@ async function clearAllStates() {
 const states = new Map();
 let currentEditItemNo = null;
 let pendingPhoto = null; // { dataUrl, name, size }
+let selectedItemNo = null; // item yang dipilih untuk paste cepat (tanpa buka modal)
 
 /* ============================================================
  * UTILITIES
@@ -1356,6 +1442,83 @@ function compressImage(file, maxDim = 1600, quality = 0.85) {
 }
 
 /* ============================================================
+ * CLIPBOARD / PASTE HELPERS
+ * ============================================================ */
+// Ekstrak file gambar pertama dari ClipboardEvent
+function extractImageFromClipboard(e) {
+  if (!e.clipboardData) return null;
+  const items = e.clipboardData.items;
+  if (!items) return null;
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+    if (item.kind === 'file' && item.type.startsWith('image/')) {
+      return item.getAsFile();
+    }
+  }
+  return null;
+}
+
+// Generate nama file untuk foto paste: screenshot_YYYYMMDD_HHMMSS.png
+function generatePasteFileName(mimeType) {
+  const ext = mimeType.includes('png') ? 'png' : (mimeType.includes('jpeg') ? 'jpg' : 'png');
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, '0');
+  const stamp = `${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  return `screenshot_${stamp}.${ext}`;
+}
+
+// Paste langsung ke row yang dipilih (tanpa modal) — simpan langsung ke DB
+async function quickPastePhotoToItem(itemNo, file) {
+  const item = ITEMS.find(i => i.itemNo === itemNo);
+  if (!item) return;
+
+  setLoading(true, 'Memproses screenshot...');
+  try {
+    const dataUrl = await compressImage(file);
+    const existing = getState(itemNo);
+    const record = {
+      itemNo,
+      // Kalau item masih pending & belum ada catatan, otomatis upgrade ke "progress"
+      status: (existing.status === 'pending' && !existing.notes) ? 'progress' : existing.status,
+      notes: existing.notes || '',
+      photoDataUrl: dataUrl,
+      photoName: file.name || generatePasteFileName(file.type || 'image/png'),
+      photoSize: Math.round(dataUrl.length * 0.75),
+      updatedAt: new Date().toISOString()
+    };
+    await saveStateRecord(record);
+    states.set(itemNo, record);
+    renderAll();
+    toast(`Foto tersimpan untuk ${item.itemNo}`, 'success');
+    updateLastUpdated();
+  } catch (err) {
+    toast('Gagal menyimpan foto: ' + err.message, 'error');
+  } finally {
+    setLoading(false);
+  }
+}
+
+// Update tampilan row selected & paste hint banner
+function setSelectedItem(itemNo) {
+  selectedItemNo = itemNo;
+  // Visual row highlight
+  $$('#tableBody tr').forEach(tr => tr.classList.remove('selected'));
+  if (itemNo) {
+    const btn = document.querySelector(`[data-edit="${CSS.escape(itemNo)}"]`);
+    if (btn) btn.closest('tr')?.classList.add('selected');
+  }
+  // Update paste hint banner
+  const hint = $('#pasteHint');
+  if (itemNo) {
+    const item = ITEMS.find(i => i.itemNo === itemNo);
+    $('#pasteHintItem').textContent = item ? item.itemNo : itemNo;
+    hint.classList.add('active');
+  } else {
+    hint.classList.remove('active');
+  }
+}
+
+/* ============================================================
  * RENDER
  * ============================================================ */
 function updateStats() {
@@ -1436,6 +1599,17 @@ function renderTable() {
   }
 
   $('#tableFooterCount').textContent = `Menampilkan ${filtered.length} dari ${ITEMS.length} item`;
+
+  // Re-apply selection after render (karena innerHTML di-replace)
+  if (selectedItemNo) {
+    const btn = document.querySelector(`[data-edit="${CSS.escape(selectedItemNo)}"]`);
+    if (btn) {
+      btn.closest('tr')?.classList.add('selected');
+    } else {
+      // Item terpilih tidak ada di hasil filter → deselect
+      setSelectedItem(null);
+    }
+  }
 }
 
 function renderAll() {
@@ -1838,6 +2012,88 @@ function bindEvents() {
       viewImage(photoImg.dataset.view);
       return;
     }
+    // Klik baris biasa → select untuk paste cepat
+    const row = e.target.closest('tr');
+    if (row) {
+      const editBtnInRow = row.querySelector('[data-edit]');
+      if (editBtnInRow) {
+        const itemNo = editBtnInRow.dataset.edit;
+        if (selectedItemNo === itemNo) {
+          setSelectedItem(null); // klik lagi → deselect
+        } else {
+          setSelectedItem(itemNo);
+        }
+      }
+    }
+  });
+
+  // Paste hint close button
+  $('#pasteHintClose').addEventListener('click', () => setSelectedItem(null));
+
+  // GLOBAL PASTE HANDLER (Ctrl+V di mana saja)
+  document.addEventListener('paste', async (e) => {
+    // Jangan intercept paste di input text / textarea — biar user bisa paste teks normal
+    const target = e.target;
+    const isTextInput = target && (
+      target.tagName === 'TEXTAREA' ||
+      (target.tagName === 'INPUT' && !['file','checkbox','radio','button','submit'].includes(target.type))
+    );
+
+    const imageFile = extractImageFromClipboard(e);
+    if (!imageFile) return; // bukan paste gambar → biarkan default
+
+    // Prioritas:
+    // 1. Modal edit terbuka → paste ke pendingPhoto modal
+    // 2. Ada row terpilih → quick paste langsung ke row
+    // 3. Tidak ada konteks → tampilkan toast petunjuk
+    if ($('#modalBackdrop').classList.contains('active')) {
+      // Paste ke modal yang sedang terbuka
+      e.preventDefault();
+      // Flash animation untuk feedback visual
+      $('#photoUploadLabel').classList.add('paste-flash');
+      setTimeout(() => $('#photoUploadLabel').classList.remove('paste-flash'), 500);
+
+      setLoading(true, 'Memproses screenshot...');
+      try {
+        const dataUrl = await compressImage(imageFile);
+        pendingPhoto = {
+          dataUrl,
+          name: imageFile.name || generatePasteFileName(imageFile.type || 'image/png'),
+          size: Math.round(dataUrl.length * 0.75)
+        };
+        renderPhotoUpload();
+        toast('Screenshot siap disimpan', 'success');
+      } catch (err) {
+        toast('Gagal memproses: ' + err.message, 'error');
+      } finally {
+        setLoading(false);
+      }
+    } else if (selectedItemNo) {
+      // Quick paste ke row yang dipilih
+      e.preventDefault();
+      if (isTextInput) return; // kalau fokus di input, jangan override
+      const itemNo = selectedItemNo;
+      await quickPastePhotoToItem(itemNo, imageFile);
+      setSelectedItem(null); // reset selection setelah paste
+    } else {
+      // Tidak ada item dipilih
+      if (!isTextInput) {
+        toast('Pilih item dulu (klik baris) atau buka modal edit', 'error');
+      }
+    }
+  });
+
+  // Esc deselect row juga
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      if ($('#lightbox').classList.contains('active')) {
+        $('#lightbox').classList.remove('active');
+      } else if ($('#modalBackdrop').classList.contains('active')) {
+        closeModal();
+      } else if (selectedItemNo) {
+        setSelectedItem(null);
+      }
+    }
   });
 
   // Modal
@@ -1848,17 +2104,6 @@ function bindEvents() {
     if (e.target === $('#modalBackdrop')) closeModal();
   });
   $('#modalPhotoInput').addEventListener('change', handlePhotoChange);
-
-  // Esc closes modal / lightbox
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') {
-      if ($('#lightbox').classList.contains('active')) {
-        $('#lightbox').classList.remove('active');
-      } else if ($('#modalBackdrop').classList.contains('active')) {
-        closeModal();
-      }
-    }
-  });
 
   // Lightbox
   $('#lightbox').addEventListener('click', () => {
